@@ -15,6 +15,7 @@ jobs:
       DB_PASSWORD: test_password
       DB_HOST: localhost
       DB_PORT: 5432
+      DB_DIALECT: postgres
 
     steps:
       - name: Checkout Repository
@@ -44,8 +45,9 @@ jobs:
           fi
 
           # Drop user-owned objects before dropping user
-          sudo -u postgres psql -c "DROP DATABASE IF EXISTS $DB_NAME;"
-          sudo -u postgres psql -c "DROP USER IF EXISTS $DB_USER;"
+          sudo -u postgres psql -c "SELECT 'DROP DATABASE $DB_NAME;' WHERE EXISTS (SELECT FROM pg_database WHERE datname = '$DB_NAME');" || true
+          sudo -u postgres psql -c "SELECT 'DROP USER $DB_USER;' WHERE EXISTS (SELECT FROM pg_roles WHERE rolname = '$DB_USER');" || true
+          
           sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;"
           sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
           sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
@@ -68,4 +70,5 @@ jobs:
       - name: Run Tests
         env:
           DATABASE_URL: postgres://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME
+          DB_DIALECT: postgres
         run: npm test
