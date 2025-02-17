@@ -7,15 +7,14 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-
+    
     env:
-      # If you want to set or override the postgres password, set this in GitHub secrets
-      # If you're fine with no password, you can omit it
-      DB_USER: postgres
+      # These are pulled from GitHub Actions secrets.
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_NAME: testdb
-      DB_HOST: localhost
-      DB_PORT: 5432
+      DB_NAME: ${{ secrets.DB_NAME }}
 
     steps:
       - name: Check out repository
@@ -31,14 +30,18 @@ jobs:
 
       - name: Configure PostgreSQL
         run: |
-          # If you *do* want to set a password for the postgres user:
+          # If you have defined a DB_PASSWORD, this sets a password for the default 'postgres' user.
           if [ -n "$DB_PASSWORD" ]; then
+            echo "Setting password for user 'postgres'..."
             sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$DB_PASSWORD';"
+          else
+            echo "No DB_PASSWORD specified. Using trust authentication for 'postgres'."
           fi
 
-          # Create the test database owned by postgres
-          sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER postgres;"
-          # or simply: sudo -u postgres createdb $DB_NAME
+          # Create your test database if it doesn't already exist. Owned by the 'postgres' user.
+          echo "Creating test database '$DB_NAME' if it does not exist..."
+          sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 || \
+            sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER postgres;"
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
@@ -47,6 +50,10 @@ jobs:
 
       - name: Install Dependencies
         run: npm install
+
+      # If you have migrations, uncomment:
+      # - name: Run migrations
+      #   run: npx sequelize-cli db:migrate --env test
 
       - name: Run Tests
         run: npm test
