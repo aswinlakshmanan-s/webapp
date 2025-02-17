@@ -8,13 +8,17 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
     
-    # Environment variables for your test DB connection
+    # Environment variables (populated from your GitHub Actions secrets)
+    # DB_HOST can be either 'localhost' for local Postgres 
+    # or a remote host if you actually want to connect externally.
     env:
-      DB_NAME: testdb
-      DB_USER: testuser
-      DB_PASSWORD: testpass
-      DB_HOST: localhost
-      DB_PORT: 5432
+      PORT: ${{ secrets.PORT }}
+      DB_HOST: ${{ secrets.DB_HOST }}
+      DB_PORT: ${{ secrets.DB_PORT }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_DIALECT: ${{ secrets.DB_DIALECT }}
 
     steps:
       - name: Check out repository
@@ -28,28 +32,21 @@ jobs:
       - name: Start PostgreSQL service
         run: sudo service postgresql start
 
-      - name: Configure PostgreSQL (create DB, user, etc.)
+      - name: Configure PostgreSQL (create DB, user)
         run: |
-          # Create a test user with a password
+          # Create a new DB user and set a password (safely taken from secrets)
           sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
 
-          # Create a test database owned by our new user
+          # Create the test database, owned by that user
           sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER;"
-
-          # Optionally, grant privileges if needed
-          # sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: 16
 
-      - name: Install Node dependencies
+      - name: Install Dependencies
         run: npm install
 
-      # If you have migrations, uncomment and adapt:
-      # - name: Run migrations
-      #   run: npx sequelize-cli db:migrate --env test
-
-      - name: Run tests
+      - name: Run Tests
         run: npm test
