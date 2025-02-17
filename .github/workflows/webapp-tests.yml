@@ -1,67 +1,46 @@
-name: CI - Test with Local Postgres
+name: Integration Tests
 
 on:
   pull_request:
-    branches: [ "main" ]
+    types: [ opened, closed, synchronize ]
+    branches:
+      - main
 
 jobs:
-  build-and-test:
+  integration-tests:
+    # Only run for PRs that are opened, synchronized, or merged
+    if: github.event.pull_request.merged == true || github.event.action == 'opened' || github.event.action == 'synchronize'
     runs-on: ubuntu-latest
-    
-    env:
-      # These are pulled from GitHub Actions secrets.
-      DB_HOST: ${{ secrets.DB_HOST }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-
     steps:
-      - name: Print environment variables
+      - name: Start PostgreSQL and Set Up Database
         run: |
-          echo "DB_HOST: ${DB_HOST}"
-          echo "DB_PORT: ${DB_PORT}"
-          echo "DB_USER: ${DB_USER}"
-          echo "DB_PASSWORD: ${DB_PASSWORD}"
-          echo "DB_NAME: ${DB_NAME}"
-          
-      - name: Check out repository
-        uses: actions/checkout@v3
+          sudo systemctl start postgresql
+          # Create the user and set its password
+          sudo -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';"
+          # Create the test database with the user as the owner
+          sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME} WITH OWNER ${DB_USER};"
+        env:
+          DB_USER: ${{ vars.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ vars.DB_NAME }}
 
-      - name: Install PostgreSQL
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y postgresql postgresql-contrib
+      - name: Checkout Repository
+        uses: actions/checkout@v4
 
-      - name: Start PostgreSQL service
-        run: sudo service postgresql start
-
-      - name: Configure PostgreSQL
-        run: |
-          # If you have defined a DB_PASSWORD, this sets a password for the default 'postgres' user.
-          if [ -n "$DB_PASSWORD" ]; then
-            echo "Setting password for user 'postgres'..."
-            sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$DB_PASSWORD';"
-          else
-            echo "No DB_PASSWORD specified. Using trust authentication for 'postgres'."
-          fi
-
-          # Create your test database if it doesn't already exist. Owned by the 'postgres' user.
-          echo "Creating test database '$DB_NAME' if it does not exist..."
-          sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname = '$DB_NAME'" | grep -q 1 || \
-            sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER postgres;"
-
-      - name: Set up Node.js
+      - name: Set Up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: '18.x'
 
       - name: Install Dependencies
-        run: npm install
-
-      # If you have migrations, uncomment:
-      # - name: Run migrations
-      #   run: npx sequelize-cli db:migrate --env test
+        run: npm ci
 
       - name: Run Tests
         run: npm test
+        env:
+          DB_USER: ${{ vars.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          DB_NAME: ${{ vars.DB_NAME }}
+          PORT: ${{ vars.PORT }}
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_PORT: ${{ vars.DB_PORT }}
