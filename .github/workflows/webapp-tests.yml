@@ -1,46 +1,57 @@
-name: Integration Tests
+name: Continuous Integration
 
 on:
   pull_request:
-    types: [ opened, closed, synchronize ]
     branches:
       - main
 
 jobs:
-  integration-tests:
-    # Only run for PRs that are opened, synchronized, or merged
-    if: github.event.pull_request.merged == true || github.event.action == 'opened' || github.event.action == 'synchronize'
+  test:
     runs-on: ubuntu-latest
-    steps:
-      - name: Start PostgreSQL and Set Up Database
-        run: |
-          sudo systemctl start postgresql
-          # Create the user and set its password
-          sudo -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASSWORD}';"
-          # Create the test database with the user as the owner
-          sudo -u postgres psql -c "CREATE DATABASE ${DB_NAME} WITH OWNER ${DB_USER};"
-        env:
-          DB_USER: ${{ vars.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ vars.DB_NAME }}
 
+    steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set Up Node.js
-        uses: actions/setup-node@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '18.x'
+          node-version: 18
+
+      - name: Install PostgreSQL
+        run: |
+          sudo apt update
+          sudo apt install -y postgresql postgresql-contrib
+          sudo systemctl start postgresql
+          sudo systemctl enable postgresql
+          psql --version
+
+      - name: Configure PostgreSQL
+        run: |
+          sudo -u postgres psql -c "DROP DATABASE IF EXISTS ${{ vars.DB_NAME }};"
+          sudo -u postgres psql -c "DROP USER IF EXISTS ${{ vars.DB_USER }};"
+          sudo -u postgres psql -c "CREATE DATABASE ${{ vars.DB_NAME }};"
+          sudo -u postgres psql -c "CREATE USER ${{ vars.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ vars.DB_NAME }} TO ${{ vars.DB_USER }};"
+          echo "PostgreSQL is configured with ${{ vars.DB_NAME }} and ${{ vars.DB_USER }}."
+
+      - name: Wait for PostgreSQL to Be Ready
+        run: |
+          until pg_isready -h ${{ vars.DB_HOST }} -p ${{ vars.DB_PORT }} -U ${{ vars.DB_USER }}; do
+            echo "Waiting for PostgreSQL to be ready..."
+            sleep 2
+          done
 
       - name: Install Dependencies
-        run: npm ci
+        run: npm install
 
       - name: Run Tests
-        run: npm test
         env:
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_NAME: ${{ vars.DB_NAME }}
+          DB_PORT: ${{ vars.DB_PORT }}
           DB_USER: ${{ vars.DB_USER }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          DB_NAME: ${{ vars.DB_NAME }}
           PORT: ${{ vars.PORT }}
-          DB_HOST: ${{ vars.DB_HOST }}
-          DB_PORT: ${{ vars.DB_PORT }}
+          DATABASE_URL: postgres://${{ vars.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ vars.DB_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_NAME }}
+        run: npm test
