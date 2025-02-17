@@ -27,20 +27,46 @@ jobs:
           psql --version
 
       - name: Configure PostgreSQL
+        env:
+          DB_NAME: ${{ vars.DB_NAME }}
+          DB_USER: ${{ vars.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
-          sudo -u postgres psql -c "DROP DATABASE IF EXISTS ${{ vars.DB_NAME }};"
-          sudo -u postgres psql -c "DROP USER IF EXISTS ${{ vars.DB_USER }};"
-          sudo -u postgres psql -c "CREATE DATABASE ${{ vars.DB_NAME }};"
-          sudo -u postgres psql -c "CREATE USER ${{ vars.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
-          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${{ vars.DB_NAME }} TO ${{ vars.DB_USER }};"
-          echo "PostgreSQL is configured with ${{ vars.DB_NAME }} and ${{ vars.DB_USER }}."
+          echo "Configuring PostgreSQL with DB_NAME=${DB_NAME} and DB_USER=${DB_USER}..."
+
+          # Ensure variables are set
+          if [[ -z "$DB_NAME" || -z "$DB_USER" || -z "$DB_PASSWORD" ]]; then
+            echo "ERROR: Missing database variables! Check repository variables."
+            exit 1
+          fi
+
+          # Drop user-owned objects before dropping user
+          sudo -u postgres psql -c "REASSIGN OWNED BY $DB_USER TO postgres;" || true
+          sudo -u postgres psql -c "DROP OWNED BY $DB_USER;" || true
+          sudo -u postgres psql -c "DROP DATABASE IF EXISTS $DB_NAME;"
+          sudo -u postgres psql -c "DROP USER IF EXISTS $DB_USER;"
+          sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;"
+          sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
+          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+
+          echo "✅ PostgreSQL successfully configured!"
 
       - name: Wait for PostgreSQL to Be Ready
+        env:
+          DB_HOST: ${{ vars.DB_HOST }}
+          DB_PORT: ${{ vars.DB_PORT }}
+          DB_USER: ${{ vars.DB_USER }}
         run: |
-          until pg_isready -h ${{ vars.DB_HOST }} -p ${{ vars.DB_PORT }} -U ${{ vars.DB_USER }}; do
-            echo "Waiting for PostgreSQL to be ready..."
+          DB_PORT=${DB_PORT:-5432}  # Set default port if not provided
+          echo "Waiting for PostgreSQL to be ready on ${DB_HOST}:${DB_PORT}..."
+
+          export PGUSER=$DB_USER  # Use environment variable instead of -U
+          until pg_isready -h "$DB_HOST" -p "$DB_PORT"; do
+            echo "⏳ PostgreSQL not ready yet..."
             sleep 2
           done
+
+          echo "✅ PostgreSQL is ready!"
 
       - name: Install Dependencies
         run: npm install
