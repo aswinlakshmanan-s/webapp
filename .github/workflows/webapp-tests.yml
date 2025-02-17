@@ -7,18 +7,15 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    
-    # Environment variables (populated from your GitHub Actions secrets)
-    # DB_HOST can be either 'localhost' for local Postgres 
-    # or a remote host if you actually want to connect externally.
+
     env:
-      PORT: ${{ secrets.PORT }}
-      DB_HOST: ${{ secrets.DB_HOST }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_NAME: ${{ secrets.DB_NAME }}
+      # If you want to set or override the postgres password, set this in GitHub secrets
+      # If you're fine with no password, you can omit it
+      DB_USER: postgres
       DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_DIALECT: ${{ secrets.DB_DIALECT }}
+      DB_NAME: testdb
+      DB_HOST: localhost
+      DB_PORT: 5432
 
     steps:
       - name: Check out repository
@@ -32,13 +29,16 @@ jobs:
       - name: Start PostgreSQL service
         run: sudo service postgresql start
 
-      - name: Configure PostgreSQL (create DB, user)
+      - name: Configure PostgreSQL
         run: |
-          # Create a new DB user and set a password (safely taken from secrets)
-          sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
+          # If you *do* want to set a password for the postgres user:
+          if [ -n "$DB_PASSWORD" ]; then
+            sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$DB_PASSWORD';"
+          fi
 
-          # Create the test database, owned by that user
-          sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER;"
+          # Create the test database owned by postgres
+          sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER postgres;"
+          # or simply: sudo -u postgres createdb $DB_NAME
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
