@@ -40,17 +40,22 @@ jobs:
 
           # Ensure variables are set
           if [[ -z "$DB_NAME" || -z "$DB_USER" || -z "$DB_PASSWORD" ]]; then
-            echo "ERROR: Missing database variables!"
+            echo "❌ ERROR: Missing database variables!"
             exit 1
           fi
 
           # Drop user-owned objects before dropping user
-          sudo -u postgres psql -c "SELECT 'DROP DATABASE $DB_NAME;' WHERE EXISTS (SELECT FROM pg_database WHERE datname = '$DB_NAME');" || true
-          sudo -u postgres psql -c "SELECT 'DROP USER $DB_USER;' WHERE EXISTS (SELECT FROM pg_roles WHERE rolname = '$DB_USER');" || true
+          sudo -u postgres psql -c "DROP DATABASE IF EXISTS $DB_NAME;"
+          sudo -u postgres psql -c "DROP USER IF EXISTS $DB_USER;"
           
+          # Create a new database and user
           sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;"
           sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
           sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+
+          # 🔥 Fix: Grant access to the `public` schema
+          sudo -u postgres psql -d $DB_NAME -c "GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER;"
+          sudo -u postgres psql -d $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $DB_USER;"
 
           echo "✅ PostgreSQL successfully configured!"
 
