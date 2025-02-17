@@ -1,79 +1,46 @@
-name: Continuous Integration
+name: Webapp CI
 
-on:
+on: 
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
     env:
-      DB_NAME: test_db
-      DB_USER: test_user
-      DB_PASSWORD: test_password
-      DB_HOST: localhost
-      DB_PORT: 5432
-      DB_DIALECT: postgres
+      POSTGRES_PASSWORD: ${{ secrets.PASSWORD }}
+      DATABASE_URL: postgres://postgres:${{ secrets.PASSWORD }}@localhost:5432/postgres
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 18
+    - name: Install PostgreSQL
+      run: |
+        sudo apt update
+        sudo apt install -y postgresql postgresql-contrib
+        sudo systemctl start postgresql
+        sudo systemctl enable postgresql
 
-      - name: Install PostgreSQL
-        run: |
-          sudo apt update
-          sudo apt install -y postgresql postgresql-contrib
-          sudo systemctl start postgresql
-          sudo systemctl enable postgresql
-          psql --version
+    - name: Set PostgreSQL user password
+      run: |
+        sudo -i -u postgres psql -c "ALTER USER postgres WITH PASSWORD '${{ secrets.PASSWORD }}';"
 
-      - name: Configure PostgreSQL
-        run: |
-          echo "Configuring PostgreSQL with DB_NAME=${DB_NAME} and DB_USER=${DB_USER}..."
+    - name: Wait for PostgreSQL to be ready
+      run: |
+        for i in {1..10}; do
+          PGPASSWORD=${{ secrets.PASSWORD }} pg_isready -h localhost -U postgres && break
+          echo "Waiting for PostgreSQL..."
+          sleep 2
+        done
 
-          # Ensure variables are set
-          if [[ -z "$DB_NAME" || -z "$DB_USER" || -z "$DB_PASSWORD" ]]; then
-            echo "❌ ERROR: Missing database variables!"
-            exit 1
-          fi
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
 
-          # Drop user-owned objects before dropping user
-          sudo -u postgres psql -c "DROP DATABASE IF EXISTS $DB_NAME;"
-          sudo -u postgres psql -c "DROP USER IF EXISTS $DB_USER;"
-          
-          # Create a new database and user
-          sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;"
-          sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
-          sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+    - name: Install dependencies
+      run: npm install
 
-          # 🔥 Fix: Grant access to the `public` schema
-          sudo -u postgres psql -d $DB_NAME -c "GRANT ALL PRIVILEGES ON SCHEMA public TO $DB_USER;"
-          sudo -u postgres psql -d $DB_NAME -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO $DB_USER;"
-
-          echo "✅ PostgreSQL successfully configured!"
-
-      - name: Wait for PostgreSQL to Be Ready
-        run: |
-          echo "Waiting for PostgreSQL to be ready on $DB_HOST:$DB_PORT..."
-          export PGUSER=$DB_USER
-          until pg_isready -h "$DB_HOST" -p "$DB_PORT"; do
-            echo "⏳ PostgreSQL not ready yet..."
-            sleep 2
-          done
-          echo "✅ PostgreSQL is ready!"
-
-      - name: Install Dependencies
-        run: npm install
-
-      - name: Run Tests
-        env:
-          DATABASE_URL: postgres://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME
-          DB_DIALECT: postgres
-        run: npm test
+    - name: Run tests
+      run: npm test
