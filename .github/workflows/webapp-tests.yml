@@ -9,6 +9,13 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      DB_NAME: test_db
+      DB_USER: test_user
+      DB_PASSWORD: test_password
+      DB_HOST: localhost
+      DB_PORT: 5432
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -27,22 +34,16 @@ jobs:
           psql --version
 
       - name: Configure PostgreSQL
-        env:
-          DB_NAME: ${{ vars.DB_NAME }}
-          DB_USER: ${{ vars.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         run: |
           echo "Configuring PostgreSQL with DB_NAME=${DB_NAME} and DB_USER=${DB_USER}..."
 
           # Ensure variables are set
           if [[ -z "$DB_NAME" || -z "$DB_USER" || -z "$DB_PASSWORD" ]]; then
-            echo "ERROR: Missing database variables! Check repository variables."
+            echo "ERROR: Missing database variables!"
             exit 1
           fi
 
           # Drop user-owned objects before dropping user
-          sudo -u postgres psql -c "REASSIGN OWNED BY $DB_USER TO postgres;" || true
-          sudo -u postgres psql -c "DROP OWNED BY $DB_USER;" || true
           sudo -u postgres psql -c "DROP DATABASE IF EXISTS $DB_NAME;"
           sudo -u postgres psql -c "DROP USER IF EXISTS $DB_USER;"
           sudo -u postgres psql -c "CREATE DATABASE $DB_NAME;"
@@ -52,20 +53,13 @@ jobs:
           echo "✅ PostgreSQL successfully configured!"
 
       - name: Wait for PostgreSQL to Be Ready
-        env:
-          DB_HOST: ${{ vars.DB_HOST }}
-          DB_PORT: ${{ vars.DB_PORT }}
-          DB_USER: ${{ vars.DB_USER }}
         run: |
-          DB_PORT=${DB_PORT:-5432}  # Set default port if not provided
-          echo "Waiting for PostgreSQL to be ready on ${DB_HOST}:${DB_PORT}..."
-
-          export PGUSER=$DB_USER  # Use environment variable instead of -U
+          echo "Waiting for PostgreSQL to be ready on $DB_HOST:$DB_PORT..."
+          export PGUSER=$DB_USER
           until pg_isready -h "$DB_HOST" -p "$DB_PORT"; do
             echo "⏳ PostgreSQL not ready yet..."
             sleep 2
           done
-
           echo "✅ PostgreSQL is ready!"
 
       - name: Install Dependencies
@@ -73,11 +67,5 @@ jobs:
 
       - name: Run Tests
         env:
-          DB_HOST: ${{ vars.DB_HOST }}
-          DB_NAME: ${{ vars.DB_NAME }}
-          DB_PORT: ${{ vars.DB_PORT }}
-          DB_USER: ${{ vars.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          PORT: ${{ vars.PORT }}
-          DATABASE_URL: postgres://${{ vars.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ vars.DB_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_NAME }}
+          DATABASE_URL: postgres://$DB_USER:$DB_PASSWORD@$DB_HOST:$DB_PORT/$DB_NAME
         run: npm test
