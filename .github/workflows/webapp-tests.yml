@@ -1,34 +1,55 @@
-name: Node.js Tests
+name: CI - Test with Local Postgres
 
 on:
   pull_request:
-    branches:
-      - main  # or your default branch
+    branches: [ "main" ]
 
 jobs:
   build-and-test:
-    name: Build and Test
     runs-on: ubuntu-latest
     
+    # Environment variables for your test DB connection
     env:
-      # These environment variables will be accessible in your Node.js code via process.env.*
-      PORT: ${{ secrets.PORT }}
-      DB_HOST: ${{ secrets.DB_HOST }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_DIALECT: ${{ secrets.DB_DIALECT }}
+      DB_NAME: testdb
+      DB_USER: testuser
+      DB_PASSWORD: testpass
+      DB_HOST: localhost
+      DB_PORT: 5432
 
     steps:
-      - name: Check out code
+      - name: Check out repository
         uses: actions/checkout@v3
 
-      - name: Set up Node
-        uses: actions/setup-node@v3
+      - name: Install PostgreSQL
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql postgresql-contrib
 
-      - name: Install dependencies
+      - name: Start PostgreSQL service
+        run: sudo service postgresql start
+
+      - name: Configure PostgreSQL (create DB, user, etc.)
+        run: |
+          # Create a test user with a password
+          sudo -u postgres psql -c "CREATE USER $DB_USER WITH PASSWORD '$DB_PASSWORD';"
+
+          # Create a test database owned by our new user
+          sudo -u postgres psql -c "CREATE DATABASE $DB_NAME WITH OWNER $DB_USER;"
+
+          # Optionally, grant privileges if needed
+          # sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE $DB_NAME TO $DB_USER;"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install Node dependencies
         run: npm install
+
+      # If you have migrations, uncomment and adapt:
+      # - name: Run migrations
+      #   run: npx sequelize-cli db:migrate --env test
 
       - name: Run tests
         run: npm test
