@@ -37,7 +37,6 @@ describe('API Tests', () => {
                     resolve();
                 });
             });
-
             console.log("Database connection closed.");
         } catch (error) {
             console.log("Error closing connection:", error);
