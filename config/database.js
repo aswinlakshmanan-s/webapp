@@ -1,14 +1,6 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
-
-const password = process.env.DB_PASSWORD ? String(process.env.DB_PASSWORD).trim() : '';
-
-if (!password) {
-    console.error("ERROR: DB_PASSWORD is empty!");
-    process.exit(1);
-} else {
-    console.log("DEBUG: DB_PASSWORD is set.");
-}
+console.log("DEBUG: Process ENV contains DB_PASSWORD?", Boolean(process.env.DB_PASSWORD));
 const sequelize = new Sequelize(
     process.env.DB_NAME,
     process.env.DB_USER,
