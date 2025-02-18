@@ -23,7 +23,7 @@ jobs:
       run: |
         sudo apt update && sudo apt install -y postgresql postgresql-contrib
         npm install
-        
+
     - name: Debug Environment Variables
       run: |
         echo "DEBUG: Checking if POSTGRES_PASSWORD is set"
@@ -46,8 +46,8 @@ jobs:
           echo "✅ Database ${{ vars.DB_NAME }} already exists, skipping creation."
         fi
 
-    - name: Wait for PostgreSQL
-      run: until pg_isready -h ${{ vars.DB_HOST }} -U ${{ vars.DB_USER }} -p ${{ vars.DB_PORT }}; do sleep 2; done
+    # - name: Wait for PostgreSQL
+    #   run: until pg_isready -h ${{ vars.DB_HOST }} -U ${{ vars.DB_USER }} -p ${{ vars.DB_PORT }}; do sleep 2; done
 
     - name: Run Tests
       run: npm test
