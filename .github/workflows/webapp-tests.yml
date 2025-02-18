@@ -24,46 +24,31 @@ jobs:
         sudo apt update && sudo apt install -y postgresql postgresql-contrib
         npm install
 
-    # - name: Debug Environment Variables
-    #   run: |
-    #     echo "DEBUG: Checking if POSTGRES_PASSWORD is set"
-    #     if [[ -z "${POSTGRES_PASSWORD}" ]]; then
-    #       echo "❌ ERROR: POSTGRES_PASSWORD is empty!"
-    #       exit 1
-    #     else
-    #       echo "✅ POSTGRES_PASSWORD is set"
-    #     fi
+    - name: Debug Environment Variables
+      run: |
+        echo "DEBUG: Checking if POSTGRES_PASSWORD is set"
+        if [[ -z "${POSTGRES_PASSWORD}" ]]; then
+          echo "❌ ERROR: POSTGRES_PASSWORD is empty!"
+          exit 1
+        else
+          echo "✅ POSTGRES_PASSWORD is set"
+        fi
 
-    # - name: Configure PostgreSQL
-    #   run: |
-    #     sudo systemctl start postgresql
-    #     sudo -u postgres psql -c "ALTER USER ${{ vars.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+    - name: Configure PostgreSQL
+      run: |
+        sudo systemctl start postgresql
+        sudo -u postgres psql -c "ALTER USER ${{ vars.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
         
-    #     # ✅ Only create the database if it doesn't exist
-    #     if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${{ vars.DB_NAME }}'" | grep -q 1; then
-    #       sudo -u postgres psql -c "CREATE DATABASE ${{ vars.DB_NAME }};"
-    #     else
-    #       echo "✅ Database ${{ vars.DB_NAME }} already exists, skipping creation."
-    #     fi
+        # ✅ Only create the database if it doesn't exist
+        if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${{ vars.DB_NAME }}'" | grep -q 1; then
+          sudo -u postgres psql -c "CREATE DATABASE ${{ vars.DB_NAME }};"
+        else
+          echo "✅ Database ${{ vars.DB_NAME }} already exists, skipping creation."
+        fi
 
-    # - name: Wait for PostgreSQL
-    #   run: until pg_isready -h ${{ vars.DB_HOST }} -U ${{ vars.DB_USER }} -p ${{ vars.DB_PORT }}; do sleep 2; done
+    - name: Wait for PostgreSQL
+      run: until pg_isready -h ${{ vars.DB_HOST }} -U ${{ vars.DB_USER }} -p ${{ vars.DB_PORT }}; do sleep 2; done
 
-    - name: Install PostgreSQL
-      run: |
-          echo "Installing PostgreSQL"
-          sudo apt-get update -y
-          sudo apt-get install -y postgresql postgresql-contrib
-
-    - name: Configure PostgreSQL without systemd
-      run: |
-          echo "Starting PostgreSQL manually"
-          sudo service postgresql start
-
-    - name: Update database password
-      run: |
-          echo "Updating database password"
-          sudo -u postgres psql -c "ALTER USER ${{vars.DB_USER}} WITH PASSWORD '${{secrets.DB_PASSWORD}}';"
     - name: Run Tests
       run: npm test
 

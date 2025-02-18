@@ -4,10 +4,20 @@ const { sequelize, HealthCheck } = require('../models');
 const app = require('../app');
 
 describe('API Tests', () => {
-    beforeAll(async () => await sequelize.sync({ force: true }));
+    beforeAll(async () => {
+        try {
+            await sequelize.sync({ force: true })
+        } catch (error) {
+            console.log(error)
+        }
+    }
+    );
     afterEach(async () => {
         try {
-            await HealthCheck.destroy({ truncate: true, cascade: true });
+            if (sequelize.connectionManager.pool) {
+                await sequelize.authenticate();
+                await HealthCheck.destroy({ truncate: true, cascade: true });
+            }
         } catch (error) {
             console.log(error)
         }
