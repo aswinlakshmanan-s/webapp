@@ -27,7 +27,18 @@ jobs:
     - name: Configure PostgreSQL
       run: |
         sudo systemctl start postgresql
-        sudo -u postgres psql -c "ALTER USER ${{ secrets.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+        
+    - name: Start PostgreSQL
+      run: sudo systemctl start postgresql
+
+    - name: Create PostgreSQL User & Database
+      run: |
+        sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN CREATEDB PASSWORD '$DB_PASSWORD';"
+        sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
+      env:
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_NAME: ${{ secrets.DB_NAME }}
 
     - name: Run Tests
       run: npm test
