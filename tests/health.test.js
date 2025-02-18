@@ -28,11 +28,23 @@ describe('API Tests', () => {
         try {
             console.log("Closing database connection...");
             await sequelize.close();
+
+            await new Promise((resolve, reject) => {
+                app.close((err) => {
+                    if (err) {
+                        return reject(err);
+                    }
+                    console.log("Server closed after tests");
+                    resolve();
+                });
+            });
+
             console.log("Database connection closed.");
         } catch (error) {
             console.log("Error closing connection:", error);
         }
     });
+
 
     describe('GET /healthz', () => {
         it('Should return 200 OK and create a health check record', async () => {
