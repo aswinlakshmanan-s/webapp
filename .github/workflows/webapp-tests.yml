@@ -23,6 +23,16 @@ jobs:
       run: |
         sudo apt update && sudo apt install -y postgresql postgresql-contrib
         npm install
+        
+    - name: Debug Environment Variables
+      run: |
+        echo "DEBUG: Checking if POSTGRES_PASSWORD is set"
+        if [[ -z "${POSTGRES_PASSWORD}" ]]; then
+          echo "❌ ERROR: POSTGRES_PASSWORD is empty!"
+          exit 1
+        else
+          echo "✅ POSTGRES_PASSWORD is set"
+        fi
 
     - name: Configure PostgreSQL
       run: |
@@ -49,3 +59,4 @@ jobs:
         pkill -P $$ || true  # Kill all child processes
         sudo systemctl stop postgresql  # Stop PostgreSQL after the job
         echo "Cleanup complete!"
+
