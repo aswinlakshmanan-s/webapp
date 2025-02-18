@@ -8,40 +8,39 @@ jobs:
   test:
     runs-on: ubuntu-latest
     env:
-      POSTGRES_PASSWORD: ${{ secrets.PASSWORD }}
-      DATABASE_URL: postgres://postgres:${{ secrets.PASSWORD }}@localhost:5432/postgres
-      DB_DIALECT: postgres
+      POSTGRES_DB: ${{ vars.DB_NAME }}
+      POSTGRES_USER: ${{ vars.DB_USER }}
+      POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      POSTGRES_HOST: ${{ vars.DB_HOST }}
+      POSTGRES_PORT: ${{ vars.DB_PORT }}
+      DB_DIALECT: ${{ vars.DB_DIALECT }}
+      DATABASE_URL: postgres://${{ vars.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ vars.DB_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_NAME }}
 
     steps:
-    - name: Checkout code
+    - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Install PostgreSQL
+    - name: Install Dependencies
       run: |
-        sudo apt update
-        sudo apt install -y postgresql postgresql-contrib
+        sudo apt update && sudo apt install -y postgresql postgresql-contrib
+        npm install
+
+    - name: Configure PostgreSQL
+      run: |
         sudo systemctl start postgresql
-        sudo systemctl enable postgresql
+        sudo -u postgres psql -c "ALTER USER ${{ vars.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
+        sudo -u postgres psql -c "CREATE DATABASE ${{ vars.DB_NAME }};"
 
-    - name: Set PostgreSQL user password
-      run: |
-        sudo -i -u postgres psql -c "ALTER USER postgres WITH PASSWORD '${{ secrets.PASSWORD }}';"
+    - name: Wait for PostgreSQL
+      run: until pg_isready -h ${{ vars.DB_HOST }} -U ${{ vars.DB_USER }} -p ${{ vars.DB_PORT }}; do sleep 2; done
 
-    - name: Wait for PostgreSQL to be ready
-      run: |
-        for i in {1..10}; do
-          PGPASSWORD=${{ secrets.PASSWORD }} pg_isready -h localhost -U postgres && break
-          echo "Waiting for PostgreSQL..."
-          sleep 2
-        done
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18.x'
-
-    - name: Install dependencies
-      run: npm install
-
-    - name: Run tests
+    - name: Run Tests
       run: npm test
+
+    - name: Post Job Cleanup
+      if: always()
+      run: |
+        echo "🧹 Cleaning up orphan processes..."
+        pkill -P $$ || true  # Kill all child processes
+        sudo systemctl stop postgresql  # Stop PostgreSQL after the job
+        echo "Cleanup complete!"
