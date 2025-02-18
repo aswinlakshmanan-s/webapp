@@ -14,7 +14,6 @@ jobs:
       POSTGRES_HOST: ${{ vars.DB_HOST }}
       POSTGRES_PORT: ${{ vars.DB_PORT }}
       DB_DIALECT: ${{ vars.DB_DIALECT }}
-      DATABASE_URL: postgres://${{ vars.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ vars.DB_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_NAME }}
 
     steps:
     - name: Checkout Repository
