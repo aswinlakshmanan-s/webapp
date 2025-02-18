@@ -1,34 +1,56 @@
-name: Node.js Tests
+name: Webapp CI
 
-on:
+on: 
   pull_request:
-    branches:
-      - main  # or your default branch
+    branches: [main]
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  test:
     runs-on: ubuntu-latest
-    
     env:
-      # These environment variables will be accessible in your Node.js code via process.env.*
-      PORT: ${{ secrets.PORT }}
+      DB_NAME: ${{ secrets.DB_NAME }}
+      DB_USER: ${{ secrets.DB_USER }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_HOST: ${{ secrets.DB_HOST }}
       DB_PORT: ${{ secrets.DB_PORT }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
       DB_DIALECT: ${{ secrets.DB_DIALECT }}
 
     steps:
-      - name: Check out code
-        uses: actions/checkout@v3
+    - name: Checkout Repository
+      uses: actions/checkout@v3
 
-      - name: Set up Node
-        uses: actions/setup-node@v3
+    - name: Install Dependencies
+      run: |
+        sudo apt update && sudo apt install -y postgresql postgresql-contrib
+        npm install
 
-      - name: Install dependencies
-        run: npm install
+    - name: Configure PostgreSQL
+      run: |
+        sudo systemctl start postgresql
+        
+    - name: Start PostgreSQL
+      run: sudo systemctl start postgresql
 
-      - name: Run tests
-        run: npm test
+    - name: Create PostgreSQL User & Database
+      run: |
+        sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN CREATEDB PASSWORD '$DB_PASSWORD';"
+        sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
+      env:
+        DB_USER: ${{ secrets.DB_USER }}
+        DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        DB_NAME: ${{ secrets.DB_NAME }}
+    - name: Drop HealthChecks Table if Exists
+      run: |
+          sudo -u postgres psql -d $DB_NAME -c 'DROP TABLE IF EXISTS "HealthChecks" CASCADE;'
+    - name: Run Tests
+      run: npm test
+
+    - name: Post Job Cleanup
+      if: always()
+      run: |
+        echo "🧹 Cleaning up orphan processes..."
+        pkill -P $$ || true  # Kill all child processes
+        sudo systemctl stop postgresql  # Stop PostgreSQL after the job
+        echo "Cleanup complete!"
+
+
