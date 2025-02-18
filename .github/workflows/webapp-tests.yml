@@ -14,6 +14,7 @@ jobs:
       POSTGRES_HOST: ${{ vars.DB_HOST }}
       POSTGRES_PORT: ${{ vars.DB_PORT }}
       DB_DIALECT: ${{ vars.DB_DIALECT }}
+      DATABASE_URL: postgres://${{ vars.DB_USER }}:${{ secrets.DB_PASSWORD }}@${{ vars.DB_HOST }}:${{ vars.DB_PORT }}/${{ vars.DB_NAME }}
 
     steps:
     - name: Checkout Repository
@@ -28,7 +29,13 @@ jobs:
       run: |
         sudo systemctl start postgresql
         sudo -u postgres psql -c "ALTER USER ${{ vars.DB_USER }} WITH PASSWORD '${{ secrets.DB_PASSWORD }}';"
-        sudo -u postgres psql -c "CREATE DATABASE ${{ vars.DB_NAME }};"
+        
+        # ✅ Only create the database if it doesn't exist
+        if ! sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='${{ vars.DB_NAME }}'" | grep -q 1; then
+          sudo -u postgres psql -c "CREATE DATABASE ${{ vars.DB_NAME }};"
+        else
+          echo "✅ Database ${{ vars.DB_NAME }} already exists, skipping creation."
+        fi
 
     - name: Wait for PostgreSQL
       run: until pg_isready -h ${{ vars.DB_HOST }} -U ${{ vars.DB_USER }} -p ${{ vars.DB_PORT }}; do sleep 2; done
