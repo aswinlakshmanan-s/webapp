@@ -34,22 +34,28 @@ describe('API Tests', () => {
     });
 
     describe('GET /healthz', () => {
-        it('Returns 200 OK', async () => {
-            const res = await request(app).get('/healthz').set('Content-Length', '0');
+
+        it('Should return 200 OK and create a health check record', async () => {
+            const res = await request(app).get('/healthz');
             expect(res.status).toBe(200);
-            expect(await HealthCheck.count()).toBe(1);
+
+            const recordCount = await HealthCheck.count();
+            expect(recordCount).toBe(1);
         });
 
-        const badRequests = [
-            { name: 'body', setup: req => req.send({ key: 'value' }) },
-            { name: 'query params', setup: req => req.query({ param: 'test' }) },
-            { name: 'invalid content-length', setup: req => req.set('Content-Length', '1') }
+        const invalidRequests = [
+            { name: 'with body data', request: request(app).get('/healthz').send({ key: 'value' }) },
+            { name: 'with query params', request: request(app).get('/healthz').query({ param: 'test' }) },
+            { name: 'with invalid content-length', request: request(app).get('/healthz').set('Content-Length', '1') }
         ];
 
-        badRequests.forEach(({ name, setup }) => {
-            it(`Returns 400 Bad Request (${name})`, async () => {
-                const res = await setup(request(app).get('/healthz')).expect(400);
-                expect(await HealthCheck.count()).toBe(0);
+        invalidRequests.forEach(({ name, request }) => {
+            it(`Should return 400 Bad Request ${name}`, async () => {
+                const res = await request;
+                expect(res.status).toBe(400);
+
+                const recordCount = await HealthCheck.count();
+                expect(recordCount).toBe(0);
             });
         });
 
