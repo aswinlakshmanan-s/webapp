@@ -52,5 +52,3 @@ jobs:
         pkill -P $$ || true  # Kill all child processes
         sudo systemctl stop postgresql  # Stop PostgreSQL after the job
         echo "Cleanup complete!"
-
-
