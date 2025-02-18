@@ -39,7 +39,9 @@ jobs:
         DB_USER: ${{ secrets.DB_USER }}
         DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
         DB_NAME: ${{ secrets.DB_NAME }}
-
+    - name: Drop HealthChecks Table if Exists
+      run: |
+          sudo -u postgres psql -d $DB_NAME -c 'DROP TABLE IF EXISTS "HealthChecks" CASCADE;'
     - name: Run Tests
       run: npm test
 
