@@ -24,9 +24,6 @@ jobs:
         sudo apt update && sudo apt install -y postgresql postgresql-contrib
         npm install
 
-    - name: Echo DB_DIALECT for verification
-      run: echo "DB_DIALECT is ${{secrets.DB_DIALECT}}
-
     - name: Debug Environment Variables
       run: |
         echo "DEBUG: Checking if POSTGRES_PASSWORD is set"
