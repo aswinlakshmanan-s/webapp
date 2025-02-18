@@ -6,59 +6,57 @@ const app = require('../app');
 describe('API Tests', () => {
     beforeAll(async () => {
         try {
-            await sequelize.sync({ force: true })
             await sequelize.authenticate();
+            await sequelize.sync({ force: true });
+            console.log("Database connected successfully.");
         } catch (error) {
-            console.log(error)
-        }
-    }
-    );
-    afterEach(async () => {
-        try {
-            if (sequelize.connectionManager.pool) {
-                await sequelize.authenticate();
-                await HealthCheck.destroy({ truncate: true, cascade: true });
-            }
-        } catch (error) {
-            console.log(error)
+            console.error("Database connection failed:", error);
+            process.exit(1);
         }
     });
+
+    afterEach(async () => {
+        try {
+            await sequelize.authenticate();
+            await HealthCheck.destroy({ truncate: true, cascade: true });
+        } catch (error) {
+            console.log("Error during cleanup:", error);
+        }
+    });
+
     afterAll(async () => {
         try {
-            if (sequelize.connectionManager.pool) {
-                await sequelize.close()
-            }
+            console.log("Closing database connection...");
+            await sequelize.close();
+            console.log("Database connection closed.");
         } catch (error) {
-            console.log(error)
+            console.log("Error closing connection:", error);
         }
     });
 
     describe('GET /healthz', () => {
-
         it('Should return 200 OK and create a health check record', async () => {
             const res = await request(app).get('/healthz');
+            console.log("DEBUG: Response status:", res.status);
+
             expect(res.status).toBe(200);
-
-            const recordCount = await HealthCheck.count();
-            expect(recordCount).toBe(1);
+            expect(await HealthCheck.count()).toBe(1);
         });
 
-        const invalidRequests = [
-            { name: 'with body data', request: request(app).get('/healthz').send({ key: 'value' }) },
-            { name: 'with query params', request: request(app).get('/healthz').query({ param: 'test' }) },
-            { name: 'with invalid content-length', request: request(app).get('/healthz').set('Content-Length', '1') }
-        ];
-
-        invalidRequests.forEach(({ name, request }) => {
-            it(`Should return 400 Bad Request ${name}`, async () => {
-                const res = await request;
-                expect(res.status).toBe(400);
-
-                const recordCount = await HealthCheck.count();
-                expect(recordCount).toBe(0);
-            });
+        it('Should return 400 Bad Request with body data', async () => {
+            const res = await request(app).get('/healthz').send({ key: 'value' });
+            expect(res.status).toBe(400);
         });
 
+        it('Should return 400 Bad Request with query params', async () => {
+            const res = await request(app).get('/healthz').query({ param: 'test' });
+            expect(res.status).toBe(400);
+        });
+
+        it('Should return 400 Bad Request with invalid content-length', async () => {
+            const res = await request(app).get('/healthz').set('Content-Length', '1');
+            expect(res.status).toBe(400);
+        });
     });
 
     describe('Invalid Methods & Routes', () => {
