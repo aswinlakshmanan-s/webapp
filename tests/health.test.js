@@ -22,7 +22,15 @@ describe('API Tests', () => {
             console.log(error)
         }
     });
-    afterAll(async () => await sequelize.close());
+    afterAll(async () => {
+        try {
+            if (sequelize.connectionManager.pool) {
+                await sequelize.close()
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    });
 
     describe('GET /healthz', () => {
         it('Returns 200 OK', async () => {
