@@ -7,6 +7,7 @@ describe('API Tests', () => {
     beforeAll(async () => {
         try {
             await sequelize.sync({ force: true })
+            await sequelize.authenticate();
         } catch (error) {
             console.log(error)
         }
