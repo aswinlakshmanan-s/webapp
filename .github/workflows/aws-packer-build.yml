@@ -67,7 +67,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: us-east-2
 
       - name: Setup packer
         uses: hashicorp/setup-packer@main
@@ -75,15 +75,18 @@ jobs:
           version: ${{ env.PRODUCT_VERSION }}
 
       - name: Run packer init
+        working-directory: packer
         run: packer init machine-image.pkr.hcl
 
       - name: Run packer validate
+        working-directory: packer
         run: packer validate machine-image.pkr.hcl
 
       - name: Build AMI with Packer
+        working-directory: packer
         run: |
           packer build --force \
-            -var "artifact_path=$(pwd)/webapp-fork.zip" \
+            -var "artifact_path=$(pwd)/../webapp-fork.zip" \
             -var "aws_region=us-east-1" \
             -var "aws_subnet_id=${{ secrets.AWS_SUBNET_ID }}" \
             -var "ssh_username=ubuntu" \
