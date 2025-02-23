@@ -19,10 +19,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install OS Dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql postgresql-contrib
+          
+      - name: Start PostgreSQL Service
+        run: |
+          sudo service postgresql start
+
+      - name: Create PostgreSQL User & Database
+        run: |
+          sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN CREATEDB PASSWORD '$DB_PASSWORD';"
+          sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+      - name: Install Node.js Dependencies
         run: npm install
 
-      - name: Run integration tests
+      - name: Run Integration Tests
         run: npm test
 
   build-ami:
