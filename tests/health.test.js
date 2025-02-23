@@ -7,7 +7,7 @@ describe('API Tests', () => {
     beforeAll(async () => {
         try {
             await sequelize.authenticate();
-            await sequelize.sync({ force: true });
+            await sequelize.sync({ alter: true });
             console.log("Database connected successfully.");
         } catch (error) {
             console.error("Database connection failed:", error);
