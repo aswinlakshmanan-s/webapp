@@ -1,0 +1,63 @@
+name: AWS Packer Build Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run integration tests
+        run: npm test
+
+  build-ami:
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Zip project artifact
+        run: |
+          zip -r webapp-fork.zip .
+        working-directory: .
+      
+      - name: List artifact contents
+        run: ls -la webapp-fork.zip
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Install Packer
+        uses: hashicorp/setup-packer@v1
+        with:
+          packer_version: '1.8.0'
+
+      - name: Initialize Packer Template
+        run: packer init machine-image.pkr.hcl
+
+      - name: Validate Packer Template
+        run: packer validate machine-image.pkr.hcl
+
+      - name: Build AMI with Packer
+        run: |
+          packer build --force \
+            -var "artifact_path=$(pwd)/webapp-fork.zip" \
+            -var "aws_region=us-east-1" \
+            -var "aws_subnet_id=${{ secrets.AWS_SUBNET_ID }}" \
+            -var "ssh_username=ubuntu" \
+            machine-image.pkr.hcl
