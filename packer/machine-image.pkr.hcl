@@ -23,7 +23,7 @@ variable "aws_subnet_id" {
 
 variable "artifact_path" {
   type    = string
-  default = "webapp-fork.zip"  # This is the artifact ZIP containing your Node.js app
+  default = "../webapp-fork.zip"  # Adjusted: artifact is one level up from the packer folder
 }
 
 variable "ssh_username" {
@@ -40,13 +40,12 @@ source "amazon-ebs" "ubuntu_node" {
   subnet_id                   = var.aws_subnet_id
   associate_public_ip_address = true
 
-  # AMI filter for Ubuntu 24.04 LTS (update the filter if needed)
   source_ami_filter {
     filters = {
       name                = "ubuntu/images/hvm-ssd/ubuntu-lunar-24.04-amd64-server-*"
       virtualization-type = "hvm"
     }
-    owners      = ["099720109477"]  # Canonical's account ID
+    owners      = ["099720109477"]
     most_recent = true
   }
 
@@ -68,34 +67,28 @@ build {
   name    = "ubuntu-24-node"
   sources = ["source.amazon-ebs.ubuntu_node"]
 
-  # Copy the Node.js artifact from local to the build instance
   provisioner "file" {
     source      = var.artifact_path
     destination = "/tmp/webapp.zip"
   }
 
-  # 1. Install Node.js (runs scripts/install_node.sh)
   provisioner "shell" {
-    script = "scripts/install_node.sh"
+    script = "../scripts/install_node.sh"
   }
 
-  # 2. Install PostgreSQL (runs scripts/install_postgresql.sh)
   provisioner "shell" {
-    script = "scripts/install_postgresql.sh"
+    script = "../scripts/install_postgresql.sh"
   }
 
-  # 3. Create the non-login user (runs scripts/create_nonlogin_user.sh)
   provisioner "shell" {
-    script = "scripts/create_nonlogin_user.sh"
+    script = "../scripts/create_nonlogin_user.sh"
   }
 
-  # 4. Deploy the Node.js application (runs scripts/deploy_app.sh)
   provisioner "shell" {
-    script = "scripts/deploy_app.sh"
+    script = "../scripts/deploy_app.sh"
   }
 
-  # 5. Set up the systemd service (runs scripts/setup_systemd_service.sh)
   provisioner "shell" {
-    script = "scripts/setup_systemd_service.sh"
+    script = "../scripts/setup_systemd_service.sh"
   }
 }
