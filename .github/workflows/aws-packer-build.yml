@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  PRODUCT_VERSION: "1.10.0"  # Packer version to use
+
 jobs:
   integration-tests:
     runs-on: ubuntu-latest
@@ -25,8 +28,7 @@ jobs:
           sudo apt-get install -y postgresql postgresql-contrib
           
       - name: Start PostgreSQL Service
-        run: |
-          sudo service postgresql start
+        run: sudo service postgresql start
 
       - name: Create PostgreSQL User & Database
         run: |
@@ -67,15 +69,15 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
 
-      - name: Install Packer
-        uses: hashicorp/setup-packer@v1.2.2
+      - name: Setup packer
+        uses: hashicorp/setup-packer@main
         with:
-          packer_version: '1.8.0'
+          version: ${{ env.PRODUCT_VERSION }}
 
-      - name: Initialize Packer Template
+      - name: Run packer init
         run: packer init machine-image.pkr.hcl
 
-      - name: Validate Packer Template
+      - name: Run packer validate
         run: packer validate machine-image.pkr.hcl
 
       - name: Build AMI with Packer
