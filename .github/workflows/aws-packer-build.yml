@@ -84,10 +84,4 @@ jobs:
 
       - name: Build AMI with Packer
         working-directory: packer
-        run: |
-          packer build --force \
-            -var "artifact_path=$(pwd)/../webapp-fork.zip" \
-            -var "aws_region=us-east-1" \
-            -var "aws_subnet_id=${{ secrets.AWS_SUBNET_ID }}" \
-            -var "ssh_username=ubuntu" \
-            machine-image.pkr.hcl
+        run: packer build machine-image.pkr.hcl
