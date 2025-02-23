@@ -68,7 +68,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Install Packer
-        uses: hashicorp/setup-packer@v1
+        uses: hashicorp/setup-packer@v1.2.2
         with:
           packer_version: '1.8.0'
 
