@@ -18,12 +18,12 @@ variable "aws_region" {
 
 variable "aws_subnet_id" {
   type    = string
-  default = "subnet-08fb0c96b79ae087d"  # Replace with your DEV VPC subnet ID
+  default = "subnet-08fb0c96b79ae087d" # Replace with your DEV VPC subnet ID
 }
 
 variable "artifact_path" {
   type    = string
-  default = "../webapp-fork.zip"  # Adjusted: artifact is one level up from the packer folder
+  default = "../webapp-fork.zip" # Adjusted: artifact is one level up from the packer folder
 }
 
 variable "ssh_username" {
@@ -42,7 +42,7 @@ source "amazon-ebs" "ubuntu_node" {
 
   source_ami_filter {
     filters = {
-      name                = "ubuntu/images/hvm-ssd/ubuntu-lunar-24.04-amd64-server-*"
+      name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
       virtualization-type = "hvm"
     }
     owners      = ["099720109477"]
