@@ -41,6 +41,11 @@ variable "db_name" {
   default = ""
 }
 
+variable "db_user" {
+  type    = string
+  default = "test"  # or your default value if desired
+}
+
 # ---------------------------------------------------------------------
 # AWS Builder - Ubuntu 24.04 (or update filter if needed)
 # ---------------------------------------------------------------------
@@ -106,8 +111,13 @@ build {
   # Configure PostgreSQL database (using DB secrets).
   provisioner "shell" {
     environment_vars = [
+      "DB_HOST=localhost",
+      "DB_PORT=5432",
+      "DB_NAME=${var.db_name}",
+      "DB_USER=${var.db_user}",
       "DB_PASSWORD=${var.db_password}",
-      "DB_NAME=${var.db_name}"
+      "DB_DIALECT=postgres",
+      "NODE_ENV=production"
     ]
     script = "../scripts/configure_postgresql.sh"
   }
