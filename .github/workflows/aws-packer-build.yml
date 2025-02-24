@@ -88,8 +88,8 @@ jobs:
           packer build --force \
             -var "artifact_path=$(pwd)/../webapp-fork.zip" \
             -var "aws_region=us-east-2" \
-            -var "AWS_SUBNET_ID=${{ secrets.AWS_SUBNET_ID }}" \
+            -var "aws_subnet_id=${{ secrets.AWS_SUBNET_ID }}" \
             -var "ssh_username=ubuntu" \
-            -var "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" \
-            -var "DB_NAME=${{ secrets.DB_NAME }}" \
+            -var "db_password=${{ secrets.DB_PASSWORD }}" \
+            -var "db_name=${{ secrets.DB_NAME }}" \
             machine-image.pkr.hcl
