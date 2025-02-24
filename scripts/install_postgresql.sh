@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+echo "Installing PostgreSQL and its dependencies..."
+sudo apt-get update -y
+sudo apt-get install -y postgresql postgresql-contrib
+
 echo "Starting PostgreSQL service..."
 sudo systemctl enable postgresql
 sudo systemctl start postgresql
