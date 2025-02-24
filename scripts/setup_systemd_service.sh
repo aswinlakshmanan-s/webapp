@@ -1,24 +1,18 @@
 #!/bin/bash
 set -e
 
-# Create the systemd service file for the Node.js application
-sudo tee /etc/systemd/system/csye6225.service > /dev/null <<'EOF'
-[Unit]
-Description=CSYE6225 Node.js Application
-After=network.target
+echo "Setting up systemd service for the Node.js application..."
 
-[Service]
-User=csye6225
-Group=csye6225
-WorkingDirectory=/opt/myapp
-ExecStart=/usr/bin/node /opt/myapp/app.js
-Restart=always
+# Copy the service file (csye6225.service) from the repository to /etc/systemd/system/
+sudo cp ../csye6225.service /etc/systemd/system/csye6225.service
 
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Reload systemd configuration, enable, and start the service
+echo "Reloading systemd daemon..."
 sudo systemctl daemon-reload
+
+echo "Enabling csye6225 service..."
 sudo systemctl enable csye6225.service
+
+echo "Starting csye6225 service..."
 sudo systemctl start csye6225.service
+
+echo "Systemd service setup complete."

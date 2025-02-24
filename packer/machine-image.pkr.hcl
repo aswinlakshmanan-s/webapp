@@ -20,13 +20,10 @@ variable "aws_subnet_id" {
   type    = string
   default = "subnet-08fb0c96b79ae087d" # Replace with your DEV VPC subnet ID
 }
-variable "AWS_SUBNET_ID" {
-  type    = string
-  default = "subnet-08fb0c96b79ae087d"
-}
+
 variable "artifact_path" {
   type    = string
-  default = "../webapp-fork.zip" # Adjusted: artifact is one level up from the packer folder
+  default = "../webapp-fork.zip" # The artifact will be built in CI and placed here
 }
 
 variable "ssh_username" {
@@ -34,18 +31,18 @@ variable "ssh_username" {
   default = "ubuntu"
 }
 
-variable "DB_PASSWORD" {
+variable "db_password" {
   type    = string
   default = ""
 }
 
-variable "DB_NAME" {
+variable "db_name" {
   type    = string
   default = ""
 }
 
 # ---------------------------------------------------------------------
-# AWS Builder - Ubuntu 24.04
+# AWS Builder - Ubuntu 24.04 (or update filter if needed)
 # ---------------------------------------------------------------------
 source "amazon-ebs" "ubuntu_node" {
   region                      = var.aws_region
@@ -55,7 +52,7 @@ source "amazon-ebs" "ubuntu_node" {
 
   source_ami_filter {
     filters = {
-      name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
+      name                = "ubuntu/images/hvm-ssd/ubuntu-2404-lts-amd64-server-*"
       virtualization-type = "hvm"
     }
     owners      = ["099720109477"]
@@ -80,31 +77,43 @@ build {
   name    = "ubuntu-24-node"
   sources = ["source.amazon-ebs.ubuntu_node"]
 
+  # Copy the artifact (the webapp ZIP) into the instance.
   provisioner "file" {
     source      = var.artifact_path
     destination = "/tmp/webapp-fork.zip"
   }
 
+  # Install Node.js and dependencies.
   provisioner "shell" {
     script = "../scripts/install_node.sh"
   }
 
+  # Install PostgreSQL.
   provisioner "shell" {
     script = "../scripts/install_postgresql.sh"
   }
 
+  # Create the non-login user 'csye6225'.
   provisioner "shell" {
     script = "../scripts/create_nonlogin_user.sh"
   }
 
+  # Deploy the Node.js application (unzip artifact, install dependencies, set ownership).
   provisioner "shell" {
     script = "../scripts/deploy_app.sh"
   }
 
+  # Configure PostgreSQL database (using DB secrets).
+  provisioner "shell" {
+    environment_vars = [
+      "DB_PASSWORD=${var.db_password}",
+      "DB_NAME=${var.db_name}"
+    ]
+    script = "../scripts/configure_postgresql.sh"
+  }
+
+  # Set up the systemd service (copies our service file and starts the app).
   provisioner "shell" {
     script = "../scripts/setup_systemd_service.sh"
   }
 }
-
-
-
