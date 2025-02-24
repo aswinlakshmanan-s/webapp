@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 echo "Starting PostgreSQL service..."
 sudo systemctl enable postgresql
@@ -7,9 +8,9 @@ sudo systemctl start postgresql
 echo "Waiting for PostgreSQL to start..."
 sleep 10
 
-# Ensure required secrets are available via environment variables
+# Check for required secrets
 if [ -z "$DB_PASSWORD" ] || [ -z "$DB_NAME" ]; then
-  echo "Error: Missing required database secrets! Ensure DB_PASSWORD and DB_NAME are set in GitHub Secrets."
+  echo "Error: Missing required database secrets! Ensure DB_PASSWORD and DB_NAME are set."
   exit 1
 fi
 
