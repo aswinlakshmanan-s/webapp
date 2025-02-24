@@ -8,7 +8,7 @@ sudo mkdir -p /opt/myapp
 sudo apt-get install -y unzip
 
 # Unzip the Node.js application artifact into /opt/myapp
-sudo unzip /tmp/webapp.zip -d /opt/myapp
+sudo unzip /tmp/webapp-fork.zip -d /opt/myapp
 
 # Change directory to the app folder and install Node.js dependencies
 cd /opt/myapp
