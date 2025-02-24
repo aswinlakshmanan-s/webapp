@@ -2,10 +2,10 @@
 
 # Configuration
 BASE_DIR="/opt/csye6225"
-APP_DIR="$BASE_DIR/webapp"
+APP_DIR="$BASE_DIR/webapp-fork"
 LINUX_GROUP="csye6225_cloud"
 LINUX_USER="aswin"
-ZIP_FILE="/tmp/webapp.zip"
+ZIP_FILE="/tmp/webapp-fork.zip"
 
 # Log function to include timestamp
 log() {
