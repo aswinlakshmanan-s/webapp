@@ -69,7 +69,7 @@ build {
 
   provisioner "file" {
     source      = var.artifact_path
-    destination = "/tmp/webapp.zip"
+    destination = "/tmp/webapp-fork.zip"
   }
 
   provisioner "shell" {
