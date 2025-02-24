@@ -30,3 +30,5 @@ echo "Starting csye6225 service..."
 sudo systemctl start csye6225.service
 
 echo "Systemd service configuration complete."
+
+
