@@ -31,14 +31,6 @@ variable "ssh_username" {
   default = "ubuntu"
 }
 
-variable "db_password" {
-  type = string
-}
-
-variable "db_name" {
-  type = string
-}
-
 # ---------------------------------------------------------------------
 # AWS Builder - Ubuntu 24.04
 # ---------------------------------------------------------------------
@@ -85,10 +77,6 @@ build {
   }
 
   provisioner "shell" {
-    environment_vars = [
-      "DB_PASSWORD=${var.db_password}",
-      "DB_NAME=${var.db_name}"
-    ]
     script = "../scripts/install_postgresql.sh"
   }
 
