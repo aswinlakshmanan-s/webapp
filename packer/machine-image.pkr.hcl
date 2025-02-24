@@ -32,13 +32,11 @@ variable "ssh_username" {
 }
 
 variable "db_password" {
-  type    = string
-  default = ""
+  type = string
 }
 
 variable "db_name" {
-  type    = string
-  default = ""
+  type = string
 }
 
 # ---------------------------------------------------------------------
@@ -87,10 +85,10 @@ build {
   }
 
   provisioner "shell" {
-      environment_vars = [
-    "DB_PASSWORD={{user `db_password`}}",
-    "DB_NAME={{user `db_name`}}"
-  ]
+    environment_vars = [
+      "DB_PASSWORD=${var.db_password}",
+      "DB_NAME=${var.db_name}"
+    ]
     script = "../scripts/install_postgresql.sh"
   }
 
