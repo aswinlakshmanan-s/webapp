@@ -31,6 +31,16 @@ variable "ssh_username" {
   default = "ubuntu"
 }
 
+variable "DB_PASSWORD" {
+  type    = string
+  default = ""
+}
+
+variable "DB_NAME" {
+  type    = string
+  default = ""
+}
+
 # ---------------------------------------------------------------------
 # AWS Builder - Ubuntu 24.04
 # ---------------------------------------------------------------------
