@@ -20,7 +20,10 @@ variable "aws_subnet_id" {
   type    = string
   default = "subnet-08fb0c96b79ae087d" # Replace with your DEV VPC subnet ID
 }
-
+variable "AWS_SUBNET_ID" {
+  type    = string
+  default = "subnet-08fb0c96b79ae087d"
+}
 variable "artifact_path" {
   type    = string
   default = "../webapp-fork.zip" # Adjusted: artifact is one level up from the packer folder
