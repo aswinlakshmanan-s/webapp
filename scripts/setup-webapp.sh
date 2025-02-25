@@ -70,3 +70,5 @@ log "Starting the Node.js server..."
 sudo -u "$LINUX_USER" bash -c "cd '$APP_DIR' && node app.js" || error_exit "Failed to start the Node.js server."
 
 log "Setup completed successfully"
+
+
