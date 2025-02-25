@@ -7,7 +7,7 @@ This is a simple Express-based API that performs health checks on a service by i
 
 Before you begin, ensure that you have met the following requirements:
 
-- **Node.js** (v14.x or later)
+- **Node.js** (v14.x or later)                      
 - **npm** (Node Package Manager)
 - **PostgreSQL/MySQL** or any compatible database (based on your `DB_DIALECT` in `.env`)
 - **.env file** (with required database connection details)
