@@ -170,7 +170,7 @@ jobs:
         run: |
           packer build --force \
             -var "artifact_path=$(pwd)/../webapp-fork.zip" \
-            -var "project_id=${{ secrets.GCP_PROJECT_ID }}" \
+            -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
             -var "gcp_zone=${{ secrets.GCP_ZONE }}" \
             -var "ssh_username=ubuntu" \
             -var "db_password=${{ secrets.DB_PASSWORD }}" \
