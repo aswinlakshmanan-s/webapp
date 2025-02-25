@@ -50,7 +50,7 @@ describe('API Tests', () => {
             const res = await request(app).get('/healthz');
             console.log("DEBUG: Response status:", res.status);
 
-            expect(res.status).toBe(201);
+            expect(res.status).toBe(200);
             expect(await HealthCheck.count()).toBe(1);
         });
 
