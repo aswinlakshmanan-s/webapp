@@ -43,7 +43,7 @@ variable "gcp_zone" {
 # ---------------------------------------------------------------------
 variable "artifact_path" {
   type    = string
-  default = "../webapp-fork.zip"  # The artifact built on the CI runner
+  default = "../webapp-fork.zip"  # The artifact built on CI
 }
 
 variable "ssh_username" {
@@ -53,17 +53,17 @@ variable "ssh_username" {
 
 variable "db_password" {
   type    = string
-  default = ""  # Will be provided via CI (e.g., "test")
+  default = ""
 }
 
 variable "db_name" {
   type    = string
-  default = ""  # Will be provided via CI (e.g., "test")
+  default = ""
 }
 
 variable "db_user" {
   type    = string
-  default = "test"  # Default value (can be overridden)
+  default = "test"
 }
 
 variable "node_env" {
@@ -72,7 +72,7 @@ variable "node_env" {
 }
 
 # ---------------------------------------------------------------------
-# AWS Builder - Ubuntu (using Ubuntu Jammy as a substitute if 24.04 is not available)
+# AWS Builder - Using amazon-ebs
 # ---------------------------------------------------------------------
 source "amazon-ebs" "ubuntu_node" {
   region                      = var.aws_region
@@ -101,11 +101,11 @@ source "amazon-ebs" "ubuntu_node" {
 }
 
 # ---------------------------------------------------------------------
-# GCP Builder - Ubuntu 24.04 LTS
+# GCP Builder - Using googlecompute
 # ---------------------------------------------------------------------
 source "googlecompute" "app_image" {
   project_id          = var.gcp_project_id
-  source_image_family = "ubuntu-2404-lts"  # Make sure Ubuntu 24.04 LTS is available in your region
+  source_image_family = "ubuntu-2404-lts"  # Ensure this family is available in your region
   zone                = var.gcp_zone
   ssh_username        = var.ssh_username
   image_name          = "csye6225-app-{{timestamp}}"
@@ -113,6 +113,7 @@ source "googlecompute" "app_image" {
   image_labels = {
     created-by = "packer"
   }
+  # Optional: you can specify machine type, network, subnetwork if needed.
   machine_type = "e2-micro"
   network      = "default"
   subnetwork   = "default"
@@ -149,7 +150,7 @@ build {
     script = "../scripts/create_nonlogin_user.sh"
   }
 
-  # Deploy the Node.js application (extract artifact, install npm dependencies, set ownership, and create .env file).
+  # Deploy the Node.js application (unzip artifact, install dependencies, set ownership, create .env file).
   provisioner "shell" {
     script = "../scripts/deploy_app.sh"
   }
@@ -168,7 +169,7 @@ build {
     script = "../scripts/configure_postgresql.sh"
   }
 
-  # Set up the systemd service to start the application.
+  # Set up the systemd service (copies service file and starts the app).
   provisioner "shell" {
     script = "../scripts/setup_systemd_service.sh"
   }
