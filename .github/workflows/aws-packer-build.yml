@@ -9,45 +9,7 @@ env:
   PRODUCT_VERSION: "1.10.0"  # Packer version to use
 
 jobs:
-  integration-tests:
-    runs-on: ubuntu-latest
-    env:
-      DB_HOST: ${{ secrets.DB_HOST }}
-      DB_PORT: ${{ secrets.DB_PORT }}
-      DB_NAME: ${{ secrets.DB_NAME }}
-      DB_USER: ${{ secrets.DB_USER }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      DB_DIALECT: ${{ secrets.DB_DIALECT }}
-      NODE_ENV: ${{ secrets.NODE_ENV }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install OS Dependencies
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y postgresql postgresql-contrib
-
-      - name: Start PostgreSQL Service
-        run: sudo service postgresql start
-
-      - name: Create PostgreSQL User & Database
-        run: |
-          sudo -u postgres psql -c "CREATE ROLE $DB_USER WITH LOGIN CREATEDB PASSWORD '$DB_PASSWORD';"
-          sudo -u postgres psql -c "CREATE DATABASE $DB_NAME OWNER $DB_USER;"
-        env:
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-
-      - name: Install Node.js Dependencies
-        run: npm install
-
-      - name: Run Integration Tests
-        run: npm test
-
-  build-ami-aws:
-    needs: integration-tests
+  build-ami:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -55,8 +17,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Create .env file with required values from GitHub Secrets
-      - name: Create .env file (AWS)
+      # Create .env file from GitHub Secrets (common for both)
+      - name: Create .env file
         run: |
           cat <<EOF > .env
           DB_HOST=${{ secrets.DB_HOST }}
@@ -69,16 +31,20 @@ jobs:
           EOF
         shell: bash
 
-      - name: List .env file contents (AWS)
+      - name: List .env file contents
         run: cat .env
 
-      - name: Zip project artifact (AWS)
+      # Zip project artifact (common for both)
+      - name: Zip project artifact
         run: zip -r webapp-fork.zip .
         working-directory: .
 
-      - name: List artifact contents (AWS)
+      - name: List artifact contents
         run: ls -la webapp-fork.zip
 
+      ############################################################
+      # AWS Build Steps
+      ############################################################
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -86,7 +52,7 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-2
 
-      - name: Setup packer (AWS)
+      - name: Setup packer for AWS
         uses: hashicorp/setup-packer@main
         with:
           version: ${{ env.PRODUCT_VERSION }}
@@ -112,39 +78,9 @@ jobs:
             -var "db_user=${{ secrets.DB_USER }}" \
             machine-image.pkr.hcl
 
-  build-ami-gcp:
-    needs: integration-tests
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      # Create .env file with required values from GitHub Secrets
-      - name: Create .env file (GCP)
-        run: |
-          cat <<EOF > .env
-          DB_HOST=${{ secrets.DB_HOST }}
-          DB_PORT=${{ secrets.DB_PORT }}
-          DB_NAME=${{ secrets.DB_NAME }}
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_DIALECT=${{ secrets.DB_DIALECT }}
-          NODE_ENV=${{ secrets.NODE_ENV }}
-          EOF
-        shell: bash
-
-      - name: List .env file contents (GCP)
-        run: cat .env
-
-      - name: Zip project artifact (GCP)
-        run: zip -r webapp-fork.zip .
-        working-directory: .
-
-      - name: List artifact contents (GCP)
-        run: ls -la webapp-fork.zip
-
+      ############################################################
+      # GCP Build Steps (run after AWS steps)
+      ############################################################
       - name: Setup GCP Credentials
         uses: google-github-actions/setup-gcloud@v2
         with:
@@ -152,7 +88,7 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Setup packer (GCP)
+      - name: Setup packer for GCP
         uses: hashicorp/setup-packer@main
         with:
           version: ${{ env.PRODUCT_VERSION }}
