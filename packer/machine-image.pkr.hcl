@@ -5,15 +5,11 @@ packer {
       version = ">= 1.0.0"
       source  = "github.com/hashicorp/amazon"
     }
-    googlecompute = {
-      version = "~> 1.0.0"
-      source  = "github.com/hashicorp/googlecompute"
-    }
   }
 }
 
 # ---------------------------------------------------------------------
-# AWS Variables
+# Variables
 # ---------------------------------------------------------------------
 variable "aws_region" {
   type    = string
@@ -22,28 +18,12 @@ variable "aws_region" {
 
 variable "aws_subnet_id" {
   type    = string
-  default = "subnet-08fb0c96b79ae087d"  # Replace with your DEV VPC subnet ID
+  default = "subnet-08fb0c96b79ae087d" # Replace with your DEV VPC subnet ID
 }
 
-# ---------------------------------------------------------------------
-# GCP Variables
-# ---------------------------------------------------------------------
-variable "gcp_project_id" {
-  type    = string
-  default = "inductive-album-451801-q5"
-}
-
-variable "gcp_zone" {
-  type    = string
-  default = "us-central1-a"
-}
-
-# ---------------------------------------------------------------------
-# Common Variables
-# ---------------------------------------------------------------------
 variable "artifact_path" {
   type    = string
-  default = "../webapp-fork.zip"  # The artifact built in CI and placed here
+  default = "../webapp-fork.zip" # The artifact will be built in CI and placed here
 }
 
 variable "ssh_username" {
@@ -53,12 +33,12 @@ variable "ssh_username" {
 
 variable "db_password" {
   type    = string
-  default = ""  # Will be provided via CI
+  default = ""
 }
 
 variable "db_name" {
   type    = string
-  default = ""  # Will be provided via CI
+  default = ""
 }
 
 variable "db_user" {
@@ -66,13 +46,8 @@ variable "db_user" {
   default = "test"  # or your default value if desired
 }
 
-variable "node_env" {
-  type    = string
-  default = "production"
-}
-
 # ---------------------------------------------------------------------
-# AWS Builder - Ubuntu 24.04 (or similar)
+# AWS Builder - Ubuntu 24.04 (or update filter if needed)
 # ---------------------------------------------------------------------
 source "amazon-ebs" "ubuntu_node" {
   region                      = var.aws_region
@@ -81,13 +56,13 @@ source "amazon-ebs" "ubuntu_node" {
   associate_public_ip_address = true
 
   source_ami_filter {
-    filters = {
-      name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
-      virtualization-type = "hvm"
-    }
-    owners      = ["099720109477"]
-    most_recent = true
+  filters = {
+    name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
+    virtualization-type = "hvm"
   }
+  owners      = ["099720109477"]
+  most_recent = true
+}
 
   ssh_username = var.ssh_username
   ami_name     = "ubuntu-24-node-{{timestamp}}"
@@ -101,35 +76,13 @@ source "amazon-ebs" "ubuntu_node" {
 }
 
 # ---------------------------------------------------------------------
-# GCP Builder - Ubuntu 24.04 LTS
-# ---------------------------------------------------------------------
-source "googlecompute" "app_image" {
-  project_id          = var.gcp_project_id
-  source_image_family = "ubuntu-2404-lts"  # Ensure this family is available in your region
-  zone                = var.gcp_zone
-  ssh_username        = var.ssh_username
-  image_name          = "csye6225-app-{{timestamp}}"
-  image_family        = "csye6225-app"
-  image_labels = {
-    created-by = "packer"
-  }
-  # Optional settings
-  machine_type = "e2-micro"
-  network      = "default"
-  subnetwork   = "default"
-}
-
-# ---------------------------------------------------------------------
-# Build Block: Provisioning Steps (applied to both builders)
+# Build Block: Provisioning Steps
 # ---------------------------------------------------------------------
 build {
-  name    = "custom-webapp-image"
-  sources = [
-    "source.amazon-ebs.ubuntu_node",
-    "source.googlecompute.app_image"
-  ]
+  name    = "ubuntu-24-node"
+  sources = ["source.amazon-ebs.ubuntu_node"]
 
-  # Copy the application artifact into the instance.
+  # Copy the artifact (the webapp ZIP) into the instance.
   provisioner "file" {
     source      = var.artifact_path
     destination = "/tmp/webapp-fork.zip"
@@ -150,7 +103,7 @@ build {
     script = "../scripts/create_nonlogin_user.sh"
   }
 
-  # Deploy the Node.js application (unzip artifact, install dependencies, set ownership, create .env file).
+  # Deploy the Node.js application (unzip artifact, install dependencies, set ownership).
   provisioner "shell" {
     script = "../scripts/deploy_app.sh"
   }
@@ -164,12 +117,12 @@ build {
       "DB_USER=${var.db_user}",
       "DB_PASSWORD=${var.db_password}",
       "DB_DIALECT=postgres",
-      "NODE_ENV=${var.node_env}"
+      "NODE_ENV=production"
     ]
     script = "../scripts/configure_postgresql.sh"
   }
 
-  # Set up the systemd service (copies service file and starts the app).
+  # Set up the systemd service (copies our service file and starts the app).
   provisioner "shell" {
     script = "../scripts/setup_systemd_service.sh"
   }
