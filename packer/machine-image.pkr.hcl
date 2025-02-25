@@ -43,7 +43,7 @@ variable "gcp_zone" {
 # ---------------------------------------------------------------------
 variable "artifact_path" {
   type    = string
-  default = "../webapp-fork.zip"  # The artifact built on CI
+  default = "../webapp-fork.zip"  # The artifact built in CI and placed here
 }
 
 variable "ssh_username" {
@@ -53,17 +53,17 @@ variable "ssh_username" {
 
 variable "db_password" {
   type    = string
-  default = ""
+  default = ""  # Will be provided via CI
 }
 
 variable "db_name" {
   type    = string
-  default = ""
+  default = ""  # Will be provided via CI
 }
 
 variable "db_user" {
   type    = string
-  default = "test"
+  default = "test"  # or your default value if desired
 }
 
 variable "node_env" {
@@ -72,7 +72,7 @@ variable "node_env" {
 }
 
 # ---------------------------------------------------------------------
-# AWS Builder - Using amazon-ebs
+# AWS Builder - Ubuntu 24.04 (or similar)
 # ---------------------------------------------------------------------
 source "amazon-ebs" "ubuntu_node" {
   region                      = var.aws_region
@@ -101,7 +101,7 @@ source "amazon-ebs" "ubuntu_node" {
 }
 
 # ---------------------------------------------------------------------
-# GCP Builder - Using googlecompute
+# GCP Builder - Ubuntu 24.04 LTS
 # ---------------------------------------------------------------------
 source "googlecompute" "app_image" {
   project_id          = var.gcp_project_id
@@ -113,7 +113,7 @@ source "googlecompute" "app_image" {
   image_labels = {
     created-by = "packer"
   }
-  # Optional: you can specify machine type, network, subnetwork if needed.
+  # Optional settings
   machine_type = "e2-micro"
   network      = "default"
   subnetwork   = "default"
