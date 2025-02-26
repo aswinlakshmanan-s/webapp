@@ -69,7 +69,7 @@ source "amazon-ebs" "ubuntu_node" {
 
   launch_block_device_mappings {
     device_name           = "/dev/sda1"
-    volume_size           = 25
+    volume_size           = 10
     volume_type           = "gp2"
     delete_on_termination = true
   }
