@@ -46,6 +46,27 @@ variable "db_user" {
   default = "test"  # or your default value if desired
 }
 
+variable "db_host" {
+  type    = string
+  default = "localhost"
+}
+
+variable "db_port" {
+  type    = number
+  default = 5432
+}
+
+variable "db_dialect" {
+  type    = string
+  default = "postgres"
+}
+
+variable "port" {
+  type    = number
+  default = 8000
+}
+
+
 # ---------------------------------------------------------------------
 # AWS Builder - Ubuntu 24.04 (or update filter if needed)
 # ---------------------------------------------------------------------
@@ -105,8 +126,18 @@ build {
 
   # Deploy the Node.js application (unzip artifact, install dependencies, set ownership).
   provisioner "shell" {
+    environment_vars = [
+      "DB_PASSWORD=${var.db_password}",
+      "DB_NAME=${var.db_name}",
+      "DB_USER=${var.db_user}",
+      "DB_HOST=${var.db_host}",
+      "DB_PORT=${var.db_port}",
+      "DB_DIALECT=${var.db_dialect}",
+      "PORT=${var.port}"
+    ]
     script = "../scripts/deploy_app.sh"
   }
+
 
   # Configure PostgreSQL database (using DB secrets).
   provisioner "shell" {
