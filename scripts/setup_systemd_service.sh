@@ -11,9 +11,9 @@ After=network.target postgresql.service
 [Service]
 User=csye6225
 Group=csye6225
-WorkingDirectory=/opt/myapp
-EnvironmentFile=/opt/myapp/.env
-ExecStart=/usr/bin/node /opt/myapp/app.js
+WorkingDirectory=/opt/csye6225/webapp
+EnvironmentFile=/opt/csye6225/webapp/.env
+ExecStart=/usr/bin/node /opt/csye6225/webapp/app.js
 Restart=always
 
 [Install]
