@@ -1,37 +1,37 @@
 #!/bin/bash
 set -e
 
-echo "Creating application directory /opt/myapp..."
-sudo mkdir -p /opt/myapp
+echo "Creating application directory /opt/csye6225/webapp..."
+sudo mkdir -p /opt/csye6225/webapp
 
 echo "Installing unzip (if not installed)..."
 sudo apt-get update -y && sudo apt-get install -y unzip
 
 echo "Deploying application artifact..."
-sudo unzip /tmp/webapp-fork.zip -d /opt/myapp
+sudo unzip /tmp/webapp-fork.zip -d /opt/csye6225/webapp
 
 echo "Installing Node.js application dependencies..."
-cd /opt/myapp
+cd /opt/csye6225/webapp
 sudo npm install
 
-echo "Setting ownership of /opt/myapp to csye6225..."
-sudo chown -R csye6225:csye6225 /opt/myapp
+echo "Setting ownership of /opt/csye6225/webapp to csye6225..."
+sudo chown -R csye6225:csye6225 /opt/csye6225/webapp
 
 # Optionally, if the artifact doesn't include the .env file, create it using default values:
-if [ ! -f /opt/myapp/.env ]; then
+if [ ! -f /opt/csye6225/webapp/.env ]; then
   echo "No .env file found. Creating default .env file..."
   cat <<EOF > /tmp/.env.temp
-DB_HOST=${DB_HOST:-localhost}
-DB_PORT=${DB_PORT:-5432}
-DB_NAME=${DB_NAME:-csye6225_db}
-DB_USER=${DB_USER:-csye6225}
-DB_PASSWORD=${DB_PASSWORD:-change_me}
-DB_DIALECT=${DB_DIALECT:-postgres}
-NODE_ENV=${NODE_ENV:-production}
+DB_HOST=${DB_HOST}
+DB_PORT=${DB_PORT}
+DB_NAME=${DB_NAME}
+DB_USER=${DB_USER}
+DB_PASSWORD=${DB_PASSWORD}
+DB_DIALECT=${DB_DIALECT}
+NODE_ENV=${NODE_ENV}
 EOF
-  sudo mv /tmp/.env.temp /opt/myapp/.env
-  sudo chown csye6225:csye6225 /opt/myapp/.env
-  echo ".env file created in /opt/myapp."
+  sudo mv /tmp/.env.temp /opt/csye6225/webapp/.env
+  sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
+  echo ".env file created in /opt/csye6225/webapp."
 else
   echo ".env file already exists, skipping creation."
 fi
