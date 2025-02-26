@@ -90,7 +90,7 @@ jobs:
       - name: Build AMI with Packer
         working-directory: packer
         run: |
-          export GOOGLE_APPLICATION_CREDENTIALS=$PWD/gcp-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=$PWD/../gcp-key.json
           packer build --force \
             -var "artifact_path=$(pwd)/../webapp-fork.zip" \
             -var "aws_region=us-east-2" \
