@@ -23,7 +23,7 @@ variable "aws_subnet_id" {
 
 variable "artifact_path" {
   type    = string
-  default = "../webapp-fork.zip" # The artifact will be built in CI and placed here
+  default = "" # The artifact will be built in CI and placed here
 }
 
 variable "ssh_username" {
