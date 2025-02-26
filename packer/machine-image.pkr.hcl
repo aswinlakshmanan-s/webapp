@@ -43,7 +43,7 @@ variable "db_name" {
 
 variable "db_user" {
   type    = string
-  default = "test"  # or your default value if desired
+  default = "test" # or your default value if desired
 }
 
 variable "db_host" {
@@ -77,13 +77,13 @@ source "amazon-ebs" "ubuntu_node" {
   associate_public_ip_address = true
 
   source_ami_filter {
-  filters = {
-    name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
-    virtualization-type = "hvm"
+    filters = {
+      name                = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
+      virtualization-type = "hvm"
+    }
+    owners      = ["099720109477"]
+    most_recent = true
   }
-  owners      = ["099720109477"]
-  most_recent = true
-}
 
   ssh_username = var.ssh_username
   ami_name     = "ubuntu-24-node-{{timestamp}}"

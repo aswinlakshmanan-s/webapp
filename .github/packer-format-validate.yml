@@ -1,0 +1,39 @@
+name: Packer Status Check
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  packer-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Packer
+        uses: hashicorp/setup-packer@main
+        with:
+          version: "1.10.0"
+
+      - name: Run Packer Init
+        working-directory: packer
+        run: packer init .
+
+      - name: Check Packer Formatting
+        working-directory: packer
+        run: |
+          # Run packer fmt in "check" mode without writing changes
+          output=$(packer fmt -write=false .)
+          if [ -n "$output" ]; then
+            echo "Formatting issues detected:"
+            echo "$output"
+            exit 1
+          else
+            echo "All Packer templates are properly formatted."
+          fi
+
+      - name: Validate Packer Templates
+        working-directory: packer
+        run: packer validate .
