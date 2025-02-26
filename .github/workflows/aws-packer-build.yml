@@ -54,22 +54,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-# Create .env file with required values from GitHub Secrets
-      - name: Create .env file
-        run: |
-          cat <<EOF > .env
-          DB_HOST=${{ secrets.DB_HOST }}
-          DB_PORT=${{ secrets.DB_PORT }}
-          DB_NAME=${{ secrets.DB_NAME }}
-          DB_USER=${{ secrets.DB_USER }}
-          DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-          DB_DIALECT=${{ secrets.DB_DIALECT }}
-          EOF
-        shell: bash
-
-      - name: List .env file contents
-        run: cat .env
-
       - name: Zip project artifact
         run: |
           zip -r webapp-fork.zip .
@@ -108,4 +92,9 @@ jobs:
             -var "ssh_username=ubuntu" \
             -var "db_password=${{ secrets.DB_PASSWORD }}" \
             -var "db_name=${{ secrets.DB_NAME }}" \
+            -var "db_user=${{ secrets.DB_USER }}" \
+            -var "db_host=${{ secrets.DB_HOST }}" \
+            -var "db_port=${{ secrets.DB_PORT }}" \
+            -var "db_dialect=${{ secrets.DB_DIALECT }}" \
+            -var "port=${{ secrets.PORT }}" \
             machine-image.pkr.hcl
