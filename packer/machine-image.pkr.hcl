@@ -64,7 +64,7 @@ source "googlecompute" "compute_app_image" {
 # Build Block: Provisioning Steps
 # ---------------------------------------------------------------------
 build {
-  name    = "ubuntu-24-node"
+  name = "ubuntu-24-node"
   sources = [
     "source.amazon-ebs.ubuntu_node",
     "source.googlecompute.compute_app_image"
