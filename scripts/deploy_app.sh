@@ -12,6 +12,8 @@ sudo unzip /tmp/webapp-fork.zip -d /opt/csye6225/webapp
 
 echo "Setting ownership of /opt/csye6225/webapp to csye6225..."
 sudo chown -R csye6225:csye6225 /opt/csye6225/webapp
+sudo chmod -R 755 /opt/csye6225
+sudo chown csye6225:csye6225 /opt/csye6225/.env
 
 echo "Injecting DB secrets into .env file..."
 cat <<EOF > /tmp/.env.temp
