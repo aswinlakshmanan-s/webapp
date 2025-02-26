@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+sudo chmod -R 755 /opt/csye6225/webapp
+sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
+
 echo "Setting up systemd service for the Node.js application..."
 
 sudo tee /etc/systemd/system/csye6225.service > /dev/null <<'EOF'
