@@ -21,19 +21,33 @@ jobs:
         working-directory: packer
         run: packer init .
 
-      - name: Check Packer Formatting
+      - name: Check Packer Formatting Recursively
         working-directory: packer
         run: |
-          # Run packer fmt in "check" mode without writing changes
-          output=$(packer fmt -write=false .)
+          # Run packer fmt recursively in "check" mode without writing changes.
+          output=$(packer fmt -recursive -write=false .)
           if [ -n "$output" ]; then
-            echo "Formatting issues detected:"
+            echo "Formatting issues detected in the following files:"
             echo "$output"
             exit 1
           else
             echo "All Packer templates are properly formatted."
           fi
 
-      - name: Validate Packer Templates
+      - name: Validate Packer Templates Recursively
         working-directory: packer
-        run: packer validate .
+        run: |
+          # Find and validate all .pkr.hcl files recursively.
+          errors=0
+          find . -type f -name "*.pkr.hcl" -print0 | while IFS= read -r -d '' file; do
+            echo "Validating $file"
+            if ! packer validate "$file"; then
+              errors=1
+            fi
+          done
+          if [ $errors -ne 0 ]; then
+            echo "One or more Packer templates failed validation."
+            exit 1
+          else
+            echo "All Packer templates are valid."
+          fi

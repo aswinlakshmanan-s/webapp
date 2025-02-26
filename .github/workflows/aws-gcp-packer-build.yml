@@ -1,4 +1,4 @@
-name: AWS Packer Build Workflow
+name: AWS and GCP Packer Build Workflow
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 env:
-  PRODUCT_VERSION: "1.10.0"  # Packer version to use
+  PRODUCT_VERSION: "1.10.0"
 
 jobs:
   integration-tests:
@@ -92,11 +92,11 @@ jobs:
 
       - name: Run packer init
         working-directory: packer
-        run: packer init machine-image.pkr.hcl
+        run: packer init .
 
       - name: Run packer validate
         working-directory: packer
-        run: packer validate machine-image.pkr.hcl
+        run: packer validate .
 
       - name: Build AMI with Packer
         working-directory: packer
