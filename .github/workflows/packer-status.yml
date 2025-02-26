@@ -15,26 +15,18 @@ jobs:
       - name: Setup Packer
         uses: hashicorp/setup-packer@main
         with:
-          version: "1.10.0"  # Adjust if needed
+          version: "1.10.0"
 
       - name: Check Packer Formatting
         run: |
-          CHANGED=0
-          # Find all .pkr.hcl files and compare formatted output to current file contents.
-          for file in $(find . -type f -name "*.pkr.hcl"); do
-            echo "Checking formatting for $file ..."
-            FORMATTED=$(packer fmt -write=false "$file")
-            ORIGINAL=$(cat "$file")
-            if [ "$FORMATTED" != "$ORIGINAL" ]; then
-              echo "ERROR: $file is not properly formatted."
-              CHANGED=1
-            else
-              echo "$file is properly formatted."
-            fi
-          done
-          if [ $CHANGED -ne 0 ]; then
-            echo "One or more Packer templates are not formatted correctly. Please run 'packer fmt' locally to fix them."
+          # Run packer fmt in "check" mode without writing changes
+          output=$(packer fmt -write=false .)
+          if [ -n "$output" ]; then
+            echo "Formatting issues detected:"
+            echo "$output"
             exit 1
+          else
+            echo "All Packer templates are properly formatted."
           fi
 
       - name: Validate Packer Templates
