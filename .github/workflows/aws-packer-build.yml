@@ -54,7 +54,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-#Create .env file with required values from GitHub Secrets
+# Create .env file with required values from GitHub Secrets
       - name: Create .env file
         run: |
           cat <<EOF > .env
@@ -100,7 +100,6 @@ jobs:
 
       - name: Build AMI with Packer
         working-directory: packer
-        if: success()
         run: |
           packer build --force \
             -var "artifact_path=$(pwd)/../webapp-fork.zip" \

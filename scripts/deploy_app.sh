@@ -17,25 +17,18 @@ sudo npm install
 echo "Setting ownership of /opt/csye6225/webapp to csye6225..."
 sudo chown -R csye6225:csye6225 /opt/csye6225/webapp
 
-# Check if an .env file exists in the artifact; if so, copy it over.
-if [ -f .env ]; then
-  echo ".env file found in artifact; copying to /opt/csye6225/webapp/..."
-  sudo cp .env /opt/csye6225/webapp/.env
-  sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
-else
-  echo "No .env file found in artifact; creating one from environment variables..."
-  export DB_HOST DB_PORT DB_NAME DB_USER DB_PASSWORD DB_DIALECT NODE_ENV
-  cat <<EOF > /tmp/.env.temp
-DB_HOST=${DB_HOST}
-DB_PORT=${DB_PORT}
-DB_NAME=${DB_NAME}
-DB_USER=${DB_USER}
-DB_PASSWORD=${DB_PASSWORD}
-DB_DIALECT=${DB_DIALECT}
-NODE_ENV=${NODE_ENV}
+echo "Injecting DB secrets into .env file..."
+cat <<EOF > /tmp/.env.temp
+DB_HOST=${DB_HOST:-localhost}
+DB_PORT=${DB_PORT:-5432}
+DB_NAME=${DB_NAME:-csye6225_db}
+DB_USER=${DB_USER:-csye6225}
+DB_PASSWORD=${DB_PASSWORD:-change_me}
+DB_DIALECT=${DB_DIALECT:-postgres}
+NODE_ENV=${NODE_ENV:-production}
 EOF
-  sudo -E mv /tmp/.env.temp /opt/csye6225/webapp/.env
-  sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
-fi
+sudo mv /tmp/.env.temp /opt/csye6225/webapp/.env
+sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
+echo ".env file created in /opt/csye6225/webapp."
 
 echo "Application deployed successfully."
