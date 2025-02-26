@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# Export the expected environment variables so they're available later
-export DB_HOST DB_PORT DB_NAME DB_USER DB_PASSWORD DB_DIALECT NODE_ENV
-
 echo "Creating application directory /opt/csye6225/webapp..."
 sudo mkdir -p /opt/csye6225/webapp
 
@@ -20,12 +17,14 @@ sudo npm install
 echo "Setting ownership of /opt/csye6225/webapp to csye6225..."
 sudo chown -R csye6225:csye6225 /opt/csye6225/webapp
 
-# Debug: Print one of the variables to check if they are available
-echo "DEBUG: DB_HOST is: $DB_HOST"
-
-# Create .env file using the environment variables if it doesn't exist
-if [ ! -f /opt/csye6225/webapp/.env ]; then
-  echo "No .env file found. Creating default .env file..."
+# Check if an .env file exists in the artifact; if so, copy it over.
+if [ -f .env ]; then
+  echo ".env file found in artifact; copying to /opt/csye6225/webapp/..."
+  sudo cp .env /opt/csye6225/webapp/.env
+  sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
+else
+  echo "No .env file found in artifact; creating one from environment variables..."
+  export DB_HOST DB_PORT DB_NAME DB_USER DB_PASSWORD DB_DIALECT NODE_ENV
   cat <<EOF > /tmp/.env.temp
 DB_HOST=${DB_HOST}
 DB_PORT=${DB_PORT}
@@ -35,12 +34,8 @@ DB_PASSWORD=${DB_PASSWORD}
 DB_DIALECT=${DB_DIALECT}
 NODE_ENV=${NODE_ENV}
 EOF
-  # Use sudo -E to preserve the environment during the move
   sudo -E mv /tmp/.env.temp /opt/csye6225/webapp/.env
   sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
-  echo ".env file created in /opt/csye6225/webapp."
-else
-  echo ".env file already exists, skipping creation."
 fi
 
 echo "Application deployed successfully."
