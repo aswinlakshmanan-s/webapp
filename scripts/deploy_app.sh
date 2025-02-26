@@ -26,7 +26,7 @@ NODE_ENV=${NODE_ENV}
 EOF
 sudo mv /tmp/.env.temp /opt/csye6225/webapp/.env
 sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
-sudo chmod 640 /opt/csye6225/webapp/.env
+sudo chmod 750 /opt/csye6225/webapp/.env
 echo ".env file created in /opt/csye6225/webapp."
 
 
