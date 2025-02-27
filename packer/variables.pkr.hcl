@@ -51,6 +51,11 @@ variable "aws_ami_owners" {
   default = ["099720109477"]
 }
 
+variable "aws_source_ami" {
+  type    = string
+  default = "ami-03ec9b8707537856b"
+}
+
 
 variable "artifact_path" {
   type    = string
@@ -126,3 +131,4 @@ variable "gcp_machine_type" {
   type    = string
   default = "e2-micro"
 }
+
