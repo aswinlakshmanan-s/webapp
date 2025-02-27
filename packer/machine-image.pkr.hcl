@@ -20,15 +20,7 @@ source "amazon-ebs" "ubuntu_node" {
   instance_type               = var.aws_machine_type
   subnet_id                   = var.aws_subnet_id
   associate_public_ip_address = true
-
-  source_ami_filter {
-    filters = {
-      name                = var.aws_ami_filter_name
-      virtualization-type = var.ami_virtualization_type
-    }
-    owners      = var.aws_ami_owners
-    most_recent = true
-  }
+  source_ami                  = var.aws_source_ami
 
   ssh_username = var.ssh_username
   ami_name     = var.ami_image_name
@@ -122,5 +114,9 @@ build {
   # Set up the systemd service.
   provisioner "shell" {
     script = "../scripts/setup_systemd_service.sh"
+  }
+
+  provisioner "shell" {
+    script = "../scripts/git_removal.sh"
   }
 }
