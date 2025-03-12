@@ -104,7 +104,7 @@ variable "port" {
 
 variable "gcp_project_id" {
   type    = string
-  default = "inductive-album-451801-q5"
+  # default = "inductive-album-451801-q5"
 }
 
 variable "gcp_zone" {
