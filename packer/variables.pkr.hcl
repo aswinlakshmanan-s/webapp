@@ -130,5 +130,5 @@ variable "gcp_image_family" {
 variable "gcp_machine_type" {
   type    = string
   default = "e2-micro"
-}
+}     
 
