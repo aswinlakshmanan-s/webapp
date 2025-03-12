@@ -37,7 +37,7 @@ source "amazon-ebs" "ubuntu_node" {
 # GCP Builder
 # -----------------------
 source "googlecompute" "compute_app_image" {
-  # project_id          = var.gcp_project_id
+  project_id          = var.gcp_project_id
   source_image_family = var.gcp_raw_image
   zone                = var.gcp_zone
   ssh_username        = var.ssh_username
