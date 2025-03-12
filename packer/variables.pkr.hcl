@@ -127,8 +127,8 @@ variable "gcp_image_family" {
   default = "csye6225-img"
 }
 
-# variable "gcp_machine_type" {
-#   type    = string
-#   default = "e2-micro"
-# }
+variable "gcp_machine_type" {
+  type    = string
+  default = "e2-micro"
+}
 
