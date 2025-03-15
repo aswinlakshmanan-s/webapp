@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/v1/health', healthRoutes); // Health check route
+app.use('/', healthRoutes); // Health check route
 app.use('/v1/file', uploadRoutes);   // File upload route
 
 // Start the server
