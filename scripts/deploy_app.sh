@@ -23,12 +23,13 @@ DB_PASSWORD=${DB_PASSWORD}
 DB_DIALECT=${DB_DIALECT}
 PORT=${PORT}
 NODE_ENV=${NODE_ENV}
+AWS_REGION=${AWS_REGION}  # Add AWS region for S3 access
+AWS_BUCKET_NAME=${AWS_BUCKET_NAME}  # Add S3 bucket name
 EOF
 sudo mv /tmp/.env.temp /opt/csye6225/webapp/.env
 sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
-sudo chmod 755 /opt/csye6225/webapp/.env
+sudo chmod 600 /opt/csye6225/webapp/.env  # Restrict permissions to owner only
 echo ".env file created in /opt/csye6225/webapp."
-
 
 echo "Installing Node.js application dependencies..."
 cd /opt/csye6225/webapp
