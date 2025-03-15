@@ -73,11 +73,6 @@ build {
     script = "../scripts/install_node.sh"
   }
 
-  # Install PostgreSQL.
-  provisioner "shell" {
-    script = "../scripts/install_postgresql.sh"
-  }
-
   # Create the non-login user 'csye6225'.
   provisioner "shell" {
     script = "../scripts/create_nonlogin_user.sh"
@@ -97,25 +92,12 @@ build {
     script = "../scripts/deploy_app.sh"
   }
 
-  # Configure PostgreSQL database.
-  provisioner "shell" {
-    environment_vars = [
-      "DB_HOST=${var.db_host}",
-      "DB_PORT=${var.db_port}",
-      "DB_NAME=${var.db_name}",
-      "DB_USER=${var.db_user}",
-      "DB_PASSWORD=${var.db_password}",
-      "DB_DIALECT=${var.db_dialect}",
-      "NODE_ENV=production"
-    ]
-    script = "../scripts/configure_postgresql.sh"
-  }
-
   # Set up the systemd service.
   provisioner "shell" {
     script = "../scripts/setup_systemd_service.sh"
   }
 
+  # Remove Git history (if needed).
   provisioner "shell" {
     script = "../scripts/git_removal.sh"
   }
