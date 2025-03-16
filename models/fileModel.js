@@ -21,14 +21,11 @@ const File = sequelize.define('File', {
     },
     uploadDate: {
         type: DataTypes.DATE,
-        allowNull: false
-    },
-    userId: {
-        type: DataTypes.STRING, // assuming you're storing user ID as a string
-        allowNull: false
+        allowNull: false,
+        defaultValue: DataTypes.NOW
     }
 }, {
     timestamps: true,  // Enable timestamps (createdAt, updatedAt)
 });
 
-module.exports = File;
+module.exports = File; // Ensure the model is exported

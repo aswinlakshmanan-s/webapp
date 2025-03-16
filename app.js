@@ -15,8 +15,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/', healthRoutes); // Health check route
 app.use('/v1/file', uploadRoutes);   // File upload route
+app.use('/', healthRoutes); // Health check route
 
 // Start the server
 const runApp = app.listen(PORT, () => {
