@@ -1,14 +1,14 @@
 const express = require('express');
 const multer = require('multer');
 const AWS = require('aws-sdk');
-const { File } = require('../models'); // Assuming a 'File' model for metadata storage
+const { File } = require('../models');
 const router = express.Router();
 
 // AWS S3 configuration
 const s3 = new AWS.S3({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION
+    region: process.env.AWS_REGION,
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID, // Add access key
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY // Add secret key
 });
 
 // Set up multer storage for in-memory uploads
@@ -18,7 +18,9 @@ const upload = multer({ storage: storage });
 // POST /v1/file - Upload a file
 router.post('/', upload.single('profilePic'), async (req, res) => {
     const { file } = req;
+    console.log("here")
 
+    console.log(file)
     if (!file) {
         return res.status(400).json({ message: 'No file uploaded' });
     }
@@ -29,8 +31,7 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: `${Date.now()}-${file.originalname}`,
             Body: file.buffer,
-            ContentType: file.mimetype,
-            ACL: 'public-read'
+            ContentType: file.mimetype
         };
 
         const s3Response = await s3.upload(params).promise();
@@ -41,8 +42,7 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
             fileUrl: s3Response.Location,
             fileKey: s3Response.Key,
             fileSize: file.size,
-            uploadDate: new Date().toISOString(),
-            userId: req.user.id // Assuming `user.id` is available, you may need authentication
+            uploadDate: new Date().toISOString()
         });
 
         // Return file information
@@ -50,8 +50,7 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
             file_name: newFile.fileName,
             id: newFile.id,
             url: newFile.fileUrl,
-            upload_date: newFile.uploadDate,
-            user_id: newFile.userId
+            upload_date: newFile.uploadDate
         });
 
     } catch (error) {
@@ -60,16 +59,41 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
     }
 });
 
-// GET /v1/file - Retrieve file details
+// GET /v1/file - Retrieve all files
 router.get('/', async (req, res) => {
-    const { fileId } = req.query;
+    try {
+        const files = await File.findAll();
 
-    if (!fileId) {
+        if (!files || files.length === 0) {
+            return res.status(404).json({ message: 'No files found' });
+        }
+
+        // Map files to the required response format
+        const response = files.map(file => ({
+            file_name: file.fileName,
+            id: file.id,
+            url: file.fileUrl,
+            upload_date: file.uploadDate
+        }));
+
+        res.status(200).json(response);
+
+    } catch (error) {
+        console.error('Error fetching files:', error);
+        res.status(500).json({ message: 'Error fetching files' });
+    }
+});
+
+// GET /v1/file/{id} - Retrieve file details by ID
+router.get('/:id', async (req, res) => {
+    const { id } = req.params;
+
+    if (!id) {
         return res.status(400).json({ message: 'File ID is required' });
     }
 
     try {
-        const file = await File.findOne({ where: { id: fileId } });
+        const file = await File.findOne({ where: { id } });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });
@@ -79,8 +103,7 @@ router.get('/', async (req, res) => {
             file_name: file.fileName,
             id: file.id,
             url: file.fileUrl,
-            upload_date: file.uploadDate,
-            user_id: file.userId
+            upload_date: file.uploadDate
         });
 
     } catch (error) {
@@ -89,16 +112,16 @@ router.get('/', async (req, res) => {
     }
 });
 
-// DELETE /v1/file - Delete a file
-router.delete('/', async (req, res) => {
-    const { fileId } = req.query;
+// DELETE /v1/file/{id} - Delete a file by ID
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
 
-    if (!fileId) {
+    if (!id) {
         return res.status(400).json({ message: 'File ID is required' });
     }
 
     try {
-        const file = await File.findOne({ where: { id: fileId } });
+        const file = await File.findOne({ where: { id } });
 
         if (!file) {
             return res.status(404).json({ message: 'File not found' });

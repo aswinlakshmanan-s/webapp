@@ -1,5 +1,7 @@
 const sequelize = require('../config/database');
 const HealthCheck = require('./healthCheck');
+const File = require('./fileModel'); // Import the File model
+
 
 const initDB = async () => {
     try {
@@ -12,4 +14,4 @@ const initDB = async () => {
     }
 };
 
-module.exports = { sequelize, initDB, HealthCheck };
+module.exports = { sequelize, initDB, HealthCheck, File };
