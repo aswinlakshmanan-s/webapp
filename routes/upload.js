@@ -4,12 +4,14 @@ const AWS = require('aws-sdk');
 const { File } = require('../models');
 const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
+require('dotenv').config(); // Load environment variables from .env
+
 // AWS S3 configuration
 const s3 = new AWS.S3({
-    region: process.env.AWS_REGION,
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID, // Add access key
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY // Add secret key
+    region: process.env.AWS_REGION,  // AWS region from environment variables
 });
+
+const bucketName = process.env.AWS_BUCKET_NAME; // S3 bucket name from .env
 
 // Set up multer storage for in-memory uploads
 const storage = multer.memoryStorage();
@@ -28,7 +30,7 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
     try {
         // Upload file to S3
         const params = {
-            Bucket: process.env.AWS_BUCKET_NAME,
+            Bucket: bucketName,
             Key: file_id,
             Body: file.buffer,
             ContentType: file.mimetype
@@ -129,7 +131,7 @@ router.delete('/:id', async (req, res) => {
 
         // Delete file from S3
         const params = {
-            Bucket: process.env.AWS_BUCKET_NAME,
+            Bucket: bucketName,
             Key: file.fileKey
         };
 
