@@ -17,7 +17,6 @@ After=network.target
 User=csye6225
 Group=csye6225
 WorkingDirectory=/opt/csye6225/webapp
-EnvironmentFile=/opt/csye6225/webapp/.env
 ExecStart=/usr/bin/node /opt/csye6225/webapp/app.js
 Restart=always
 StandardOutput=append:/var/log/csye6225.log
