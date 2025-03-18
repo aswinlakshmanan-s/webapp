@@ -127,12 +127,12 @@ jobs:
           echo "ami-id=$AMI_ID" >> $GITHUB_ENV
           echo "gcp-image=$GCP_IMAGE_NAME" >> $GITHUB_ENV
       
-      - name: Share GCP Image with Another Project
-        run: |
-          gcloud compute images add-iam-policy-binding ${{ env.gcp-image }} \
-            --project=${{ secrets.GCP_PROJECT_ID }} \
-            --member=serviceAccount:${{ secrets.GCP_DEMO_PROJECT_NUMBER }}@cloudservices.gserviceaccount.com \
-            --role=roles/compute.imageUser
+      # - name: Share GCP Image with Another Project
+      #   run: |
+      #     gcloud compute images add-iam-policy-binding ${{ env.gcp-image }} \
+      #       --project=${{ secrets.GCP_PROJECT_ID }} \
+      #       --member=serviceAccount:${{ secrets.GCP_DEMO_PROJECT_NUMBER }}@cloudservices.gserviceaccount.com \
+      #       --role=roles/compute.imageUser
           
       - name: Share AWS AMI with Another AWS Account
         run: |

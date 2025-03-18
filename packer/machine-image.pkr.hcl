@@ -80,15 +80,15 @@ build {
 
   # Deploy the Node.js application.
   provisioner "shell" {
-    environment_vars = [
-      "DB_PASSWORD=${var.db_password}",
-      "DB_NAME=${var.db_name}",
-      "DB_USER=${var.db_user}",
-      "DB_HOST=${var.db_host}",
-      "DB_PORT=${var.db_port}",
-      "DB_DIALECT=${var.db_dialect}",
-      "PORT=${var.port}"
-    ]
+    # environment_vars = [
+    #   "DB_PASSWORD=${var.db_password}",
+    #   "DB_NAME=${var.db_name}",
+    #   "DB_USER=${var.db_user}",
+    #   "DB_HOST=${var.db_host}",
+    #   "DB_PORT=${var.db_port}",
+    #   "DB_DIALECT=${var.db_dialect}",
+    #   "PORT=${var.port}"
+    # ]
     script = "../scripts/deploy_app.sh"
   }
 
