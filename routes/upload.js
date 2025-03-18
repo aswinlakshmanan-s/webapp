@@ -3,7 +3,7 @@ const multer = require('multer');
 const AWS = require('aws-sdk');
 const { File } = require('../models');
 const router = express.Router();
-
+const { v4: uuidv4 } = require("uuid");
 // AWS S3 configuration
 const s3 = new AWS.S3({
     region: process.env.AWS_REGION,
@@ -19,7 +19,7 @@ const upload = multer({ storage: storage });
 router.post('/', upload.single('profilePic'), async (req, res) => {
     const { file } = req;
     console.log("here")
-
+    const file_id = uuidv4()
     console.log(file)
     if (!file) {
         return res.status(400).json({ message: 'No file uploaded' });
@@ -29,7 +29,7 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
         // Upload file to S3
         const params = {
             Bucket: process.env.AWS_BUCKET_NAME,
-            Key: `${Date.now()}-${file.originalname}`,
+            Key: file_id,
             Body: file.buffer,
             ContentType: file.mimetype
         };

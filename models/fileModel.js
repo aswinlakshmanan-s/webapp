@@ -12,8 +12,8 @@ const File = sequelize.define('File', {
         allowNull: false
     },
     fileKey: {
-        type: DataTypes.STRING,
-        allowNull: false
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4
     },
     fileSize: {
         type: DataTypes.INTEGER,
