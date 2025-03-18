@@ -4,8 +4,8 @@ set -e
 echo "Setting up systemd service for the Node.js application..."
 
 # Ensure the .env file has the correct permissions
-sudo chmod 600 /opt/csye6225/webapp/.env
-sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
+# sudo chmod 600 /opt/csye6225/webapp/.env
+# sudo chown csye6225:csye6225 /opt/csye6225/webapp/.env
 
 # Create the systemd service file
 sudo tee /etc/systemd/system/csye6225.service > /dev/null <<'EOF'
