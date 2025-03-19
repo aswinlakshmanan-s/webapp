@@ -59,7 +59,6 @@ build {
   name = "ubuntu-24-node"
   sources = [
     "source.amazon-ebs.ubuntu_node",
-    "source.googlecompute.compute_app_image"
   ]
 
   # Copy the artifact (the webapp ZIP) into the instance.

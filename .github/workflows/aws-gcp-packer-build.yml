@@ -68,23 +68,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Authenticate with Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}
-
-      - name: Set up Google Cloud SDK
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ secrets.GCP_PROJECT_ID }}
-          install_components: 'beta,gsutil'
-
-      - name: Save Google Cloud Credentials to File
-        run: |
-          echo '${{ secrets.GCP_SERVICE_ACCOUNT_KEY }}' > $HOME/gcp-key.json
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$HOME/gcp-key.json" >> $GITHUB_ENV
-        shell: bash
-
       - name: Setup packer
         uses: hashicorp/setup-packer@main
         with:
@@ -114,25 +97,14 @@ jobs:
             -var "db_port=${{ secrets.DB_PORT }}" \
             -var "db_dialect=${{ secrets.DB_DIALECT }}" \
             -var "port=${{ secrets.PORT }}" \
-            -var "gcp_project_id=${{ secrets.GCP_PROJECT_ID }}" \
-            -var "gcp_zone=${{ secrets.GCP_ZONE }}" \
             . | tee $HOME/packer_output.log
 
       - name: Extract AMI ID and GCP Image Name
         id: extract_packer_outputs
         run: |
           AMI_ID=$(grep -oP 'ami-[a-f0-9]+' $HOME/packer_output.log | tail -1)
-          GCP_IMAGE_NAME=$(grep -oP "A disk image was created in .*: \K(.*)" $HOME/packer_output.log | tail -1)
           
           echo "ami-id=$AMI_ID" >> $GITHUB_ENV
-          echo "gcp-image=$GCP_IMAGE_NAME" >> $GITHUB_ENV
-      
-      # - name: Share GCP Image with Another Project
-      #   run: |
-      #     gcloud compute images add-iam-policy-binding ${{ env.gcp-image }} \
-      #       --project=${{ secrets.GCP_PROJECT_ID }} \
-      #       --member=serviceAccount:${{ secrets.GCP_DEMO_PROJECT_NUMBER }}@cloudservices.gserviceaccount.com \
-      #       --role=roles/compute.imageUser
           
       - name: Share AWS AMI with Another AWS Account
         run: |
