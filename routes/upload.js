@@ -1,7 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const AWS = require('aws-sdk');
-const { File } = require('../models'); // Assuming Sequelize Model
+const { File } = require('../models'); // Sequelize Model
 const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
 require('dotenv').config(); // Load environment variables from .env
@@ -26,10 +26,9 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
     }
 
     try {
-        const fileId = uuidv4(); // Generate a unique file ID
-        const fileExtension = file.originalname.split('.').pop();
-        const sanitizedFileName = file.originalname.replace(/\s+/g, '_'); // Replace spaces with underscores
-        const fileKey = `${fileId}/${sanitizedFileName}`; // Correct format: id/image-file-name.extension
+        const fileId = uuidv4(); // Generate a unique file ID (UUID)
+        const sanitizedFileName = file.originalname.replace(/\s+/g, '_'); // Remove spaces
+        const fileKey = `${fileId}/${sanitizedFileName}`; // Format: id/image-file-name.extension
         const fileUrl = `https://${bucketName}.s3.amazonaws.com/${fileKey}`;
 
         // Upload file to S3
@@ -44,7 +43,7 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
 
         // Save file metadata in the database
         const newFile = await File.create({
-            id: fileId,
+            id: fileId,  // Ensure UUID is correctly stored
             fileName: file.originalname,
             fileUrl: fileUrl,
             fileKey: fileKey,
@@ -66,7 +65,7 @@ router.post('/', upload.single('profilePic'), async (req, res) => {
     }
 });
 
-// GET /v1/file/{id} - Retrieve file details by ID
+// 🔹 GET /v1/file/{id} - Retrieve file details by ID
 router.get('/:id', async (req, res) => {
     const { id } = req.params;
 
@@ -94,7 +93,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// DELETE /v1/file/{id} - Delete a file by ID
+// 🔹 DELETE /v1/file/{id} - Delete a file by ID
 router.delete('/:id', async (req, res) => {
     const { id } = req.params;
 

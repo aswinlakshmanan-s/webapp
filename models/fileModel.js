@@ -1,31 +1,36 @@
-// models/fileModel.js
 const { DataTypes } = require('sequelize');
-const sequelize = require('../config/database');
+const sequelize = require('../config/database'); // Adjust based on your setup
 
 const File = sequelize.define('File', {
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4, // Automatically generate UUID
+        allowNull: false,
+        primaryKey: true,
+    },
     fileName: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     fileUrl: {
         type: DataTypes.STRING,
-        allowNull: false
+        allowNull: false,
     },
     fileKey: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4
+        type: DataTypes.STRING,
+        allowNull: false,
     },
     fileSize: {
         type: DataTypes.INTEGER,
-        allowNull: false
+        allowNull: false,
     },
     uploadDate: {
         type: DataTypes.DATE,
         allowNull: false,
-        defaultValue: DataTypes.NOW
+        defaultValue: DataTypes.NOW,
     }
 }, {
-    timestamps: true,  // Enable timestamps (createdAt, updatedAt)
+    timestamps: true, // Enables createdAt & updatedAt
 });
 
-module.exports = File; // Ensure the model is exported
+module.exports = File;
