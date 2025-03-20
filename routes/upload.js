@@ -17,7 +17,7 @@ const bucketName = process.env.AWS_BUCKET_NAME; // S3 bucket name from .env
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// 🔹 POST /v1/file - Upload a file to S3 and save metadata in the DB
+// POST /v1/file - Upload a file to S3 and save metadata in the DB
 router.post('/', upload.single('profilePic'),
     (err, req, res, next) => {
         console.log(req);
@@ -28,7 +28,7 @@ router.post('/', upload.single('profilePic'),
             }
             if (err.code === 'LIMIT_UNEXPECTED_FILE') {
                 console.log(err);
-                return res.status(400).json({ error: 'MMultiple files detected in profilePic field' });
+                return res.status(400).json({ error: 'Multiple files detected in profilePic field' });
             }
             return res.status(400).json({ error: err.message });
         }
@@ -80,7 +80,7 @@ router.post('/', upload.single('profilePic'),
         }
     });
 
-// 🔹 GET /v1/file/{id} - Retrieve file details by ID
+// GET /v1/file/{id} - Retrieve file details by ID
 router.get('/:id', async (req, res) => {
     if (req.is('multipart/form-data')) {
         return res.status(400).json({ error: 'Form-data (multipart/form-data) is not allowed' });
@@ -121,7 +121,7 @@ router.get('/:id', async (req, res) => {
     }
 });
 
-// 🔹 DELETE /v1/file/{id} - Delete a file by ID
+// DELETE /v1/file/{id} - Delete a file by ID
 router.delete('/:id', async (req, res) => {
     if (req.is('multipart/form-data')) {
         return res.status(400).json({ error: 'Form-data (multipart/form-data) is not allowed' });
