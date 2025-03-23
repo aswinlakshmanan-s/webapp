@@ -4,8 +4,11 @@ set -e
 echo "Updating package repositories..."
 sudo apt-get update -y
 
+echo "Downloading Amazon CloudWatch Agent package..."
+wget -q https://s3.amazonaws.com/amazoncloudwatch-agent/ubuntu/amd64/latest/amazon-cloudwatch-agent.deb -O /tmp/amazon-cloudwatch-agent.deb
+
 echo "Installing Amazon CloudWatch Agent..."
-sudo apt-get install -y amazon-cloudwatch-agent
+sudo dpkg -i /tmp/amazon-cloudwatch-agent.deb
 
 echo "Creating CloudWatch Agent configuration directory..."
 sudo mkdir -p /opt/aws/amazon-cloudwatch-agent/etc
@@ -20,5 +23,8 @@ sudo /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl \
 echo "Enabling CloudWatch Agent to start on boot..."
 sudo systemctl enable amazon-cloudwatch-agent
 sudo systemctl start amazon-cloudwatch-agent
+
+echo "Cleaning up..."
+sudo rm /tmp/amazon-cloudwatch-agent.deb
 
 echo "CloudWatch Agent installation and configuration complete."
