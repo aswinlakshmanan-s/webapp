@@ -66,9 +66,6 @@ build {
     script = "../scripts/git_removal.sh"
   }
 
-  # -----------------------------
-  # CloudWatch Agent Provisioning
-  # -----------------------------
   # Copy the CloudWatch Agent configuration file into the instance.
   provisioner "file" {
     source      = "configs/amazon-cloudwatch-agent.json"

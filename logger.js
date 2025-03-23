@@ -5,26 +5,26 @@ const { format } = winston;
 const { combine, timestamp, errors, printf, colorize } = format;
 const { StatsD } = require('hot-shots');
 
-// Ensure the directory /var/log/webapp exists
-const logDir = '/var/log/webapp';
+// Use an environment variable or default to /var/log/webapp
+const logDir = process.env.LOG_DIR || '/var/log/webapp';
 if (!fs.existsSync(logDir)) {
-    fs.mkdirSync(logDir, { recursive: true });
+    try {
+        fs.mkdirSync(logDir, { recursive: true });
+    } catch (error) {
+        console.error(`Could not create log directory ${logDir}:`, error);
+    }
 }
 
-// Configure StatsD (customize host/port if needed)
 const statsd = new StatsD({
     host: process.env.STATSD_HOST || 'localhost',
     port: process.env.STATSD_PORT || 8125,
 });
 
-// Custom log format with details
 const customFormat = printf(({ timestamp, level, message, stack, ...meta }) => {
     const env = process.env.NODE_ENV || 'development';
-    return `${timestamp} [${env.toUpperCase()}] ${level.toUpperCase()}: ${message}${stack ? `\nStack: ${stack}` : ''
-        } ${Object.keys(meta).length ? ' ' + JSON.stringify(meta) : ''}`;
+    return `${timestamp} [${env.toUpperCase()}] ${level.toUpperCase()}: ${message}${stack ? `\nStack: ${stack}` : ''}${Object.keys(meta).length ? ' ' + JSON.stringify(meta) : ''}`;
 });
 
-// File transport writing to /var/log/webapp/app.log
 const fileTransport = new winston.transports.File({
     filename: path.join(logDir, 'app.log'),
     level: 'info',
