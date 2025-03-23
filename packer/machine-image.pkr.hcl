@@ -30,7 +30,7 @@ source "amazon-ebs" "ubuntu_node" {
 }
 
 build {
-  name    = "ubuntu-24-node"
+  name = "ubuntu-24-node"
   sources = [
     "source.amazon-ebs.ubuntu_node",
   ]
@@ -66,13 +66,11 @@ build {
     script = "../scripts/git_removal.sh"
   }
 
-  # Copy the CloudWatch Agent configuration file into the instance.
   provisioner "file" {
     source      = "configs/amazon-cloudwatch-agent.json"
     destination = "/home/ubuntu/amazon-cloudwatch-agent.json"
   }
 
-  # Run the external script to install and configure CloudWatch Agent
   provisioner "shell" {
     script = "../scripts/install_cloudwatch_agent.sh"
   }
