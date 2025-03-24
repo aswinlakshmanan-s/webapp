@@ -1,5 +1,5 @@
 const { Sequelize } = require('sequelize');
-require('dotenv').config();
+require('dotenv').config({ path: '/opt/csye6225/webapp/.env' });
 const logger = require('../logger');
 const statsd = require('../metrics');
 

@@ -4,7 +4,7 @@ const AWS = require('aws-sdk');
 const { File } = require('../models');
 const router = express.Router();
 const { v4: uuidv4 } = require("uuid");
-require('dotenv').config();
+require('dotenv').config({ path: '/opt/csye6225/webapp/.env' });
 const logger = require('../logger');
 const statsd = require('../metrics');
 

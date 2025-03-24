@@ -1,3 +1,4 @@
+require('dotenv').config({ path: '/opt/csye6225/webapp/.env' });
 const express = require('express');
 const { initDB } = require('./models');
 const healthRoutes = require('./routes/health');
