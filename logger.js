@@ -3,8 +3,8 @@ const { combine, timestamp, printf, errors } = format;
 const fs = require('fs');
 const path = require('path');
 
-// Ensure log directory exists
-const logDir = '/var/log/app';
+// Use environment variable LOG_DIR if set, otherwise default to a local 'logs' directory.
+const logDir = process.env.LOG_DIR || path.join(__dirname, 'logs');
 if (!fs.existsSync(logDir)) {
     fs.mkdirSync(logDir, { recursive: true });
 }
