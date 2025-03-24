@@ -1,7 +1,8 @@
 require('dotenv').config();
 const request = require('supertest');
 const { sequelize, HealthCheck } = require('../models');
-const app = require('../app');
+const { app, server } = require('../app');  // Updated export from app.js
+const statsd = require('../metrics');
 
 describe('API Tests', () => {
     beforeAll(async () => {
@@ -16,7 +17,6 @@ describe('API Tests', () => {
 
     afterEach(async () => {
         try {
-            await sequelize.authenticate();
             await HealthCheck.destroy({ truncate: true, cascade: true });
         } catch (error) {
             console.log("Error during cleanup:", error);
@@ -29,14 +29,18 @@ describe('API Tests', () => {
             await sequelize.close();
 
             await new Promise((resolve, reject) => {
-                app.close((err) => {
-                    if (err) {
-                        return reject(err);
-                    }
+                server.close((err) => {
+                    if (err) return reject(err);
                     console.log("Server closed after tests");
                     resolve();
                 });
             });
+
+            // If the StatsD client has an open UDP socket, close it.
+            if (statsd && statsd.socket && typeof statsd.socket.close === 'function') {
+                statsd.socket.close();
+                console.log("StatsD socket closed");
+            }
 
             console.log("Database connection closed.");
         } catch (error) {
@@ -44,12 +48,10 @@ describe('API Tests', () => {
         }
     });
 
-
     describe('GET /healthz', () => {
         it('Should return 200 OK and create a health check record', async () => {
             const res = await request(app).get('/healthz');
             console.log("DEBUG: Response status:", res.status);
-
             expect(res.status).toBe(200);
             expect(await HealthCheck.count()).toBe(1);
         });
@@ -80,6 +82,7 @@ describe('API Tests', () => {
         it('returns 404 for unknown route', async () => {
             await request(app).get('/unknown').expect(404);
         });
+
         it('Returns 503 on DB error (connection failure)', async () => {
             await sequelize.close(); // Simulate database failure
             const res = await request(app).get('/healthz').set('Content-Length', '0').expect(503);

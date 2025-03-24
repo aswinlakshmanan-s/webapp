@@ -13,16 +13,17 @@ const sequelize = new Sequelize(
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
         dialect: 'postgres',
-        dialectOptions: {
+        // Disable SSL when running in a test or non-production environment
+        dialectOptions: process.env.NODE_ENV === 'production' ? {
             ssl: {
                 require: true,
                 rejectUnauthorized: false  // Use with caution; in production, use proper CA certificates.
             }
-        },
+        } : {},
         logging: (msg, time) => {
             logger.info(msg);
-            if (typeof time == 'number') {
-                StatsD.timing('db.query.timer', time);
+            if (typeof time === 'number') {
+                statsd.timing('db.query.timer', time);
             }
         },
         benchmark: true,
@@ -30,3 +31,4 @@ const sequelize = new Sequelize(
 );
 
 module.exports = sequelize;
+
