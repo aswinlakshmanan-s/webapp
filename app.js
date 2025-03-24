@@ -23,8 +23,8 @@ app.use('/v1/file', uploadRoutes);   // File upload route
 app.use('/', healthRoutes);            // Health check route
 
 // Start the server using the custom logger
-const runApp = app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
     logger.info(`Server is running on http://localhost:${PORT}`);
 });
 
-module.exports = runApp;
+module.exports = { app, server };

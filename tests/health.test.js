@@ -1,7 +1,7 @@
 require('dotenv').config();
 const request = require('supertest');
 const { sequelize, HealthCheck } = require('../models');
-const app = require('../app');
+const { app, server } = require('../app');  // Updated to import both app and server
 
 describe('API Tests', () => {
     beforeAll(async () => {
@@ -29,7 +29,7 @@ describe('API Tests', () => {
             await sequelize.close();
 
             await new Promise((resolve, reject) => {
-                app.close((err) => {
+                server.close((err) => {
                     if (err) {
                         return reject(err);
                     }
@@ -43,7 +43,6 @@ describe('API Tests', () => {
             console.log("Error closing connection:", error);
         }
     });
-
 
     describe('GET /healthz', () => {
         it('Should return 200 OK and create a health check record', async () => {
@@ -80,6 +79,7 @@ describe('API Tests', () => {
         it('returns 404 for unknown route', async () => {
             await request(app).get('/unknown').expect(404);
         });
+
         it('Returns 503 on DB error (connection failure)', async () => {
             await sequelize.close(); // Simulate database failure
             const res = await request(app).get('/healthz').set('Content-Length', '0').expect(503);
