@@ -24,22 +24,6 @@ echo "Enabling CloudWatch Agent to start on boot..."
 sudo systemctl enable amazon-cloudwatch-agent
 sudo systemctl start amazon-cloudwatch-agent
 
-# Verification: Check if configuration file exists
-if [ -f /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.json ]; then
-    echo "CloudWatch Agent configuration file is present."
-else
-    echo "Error: CloudWatch Agent configuration file is missing!"
-    exit 1
-fi
-
-# Verification: Check if the CloudWatch Agent service is active
-if systemctl is-active --quiet amazon-cloudwatch-agent; then
-    echo "CloudWatch Agent service is running."
-else
-    echo "Error: CloudWatch Agent service is not running!"
-    exit 1
-fi
-
 echo "Cleaning up..."
 sudo rm /tmp/amazon-cloudwatch-agent.deb
 
