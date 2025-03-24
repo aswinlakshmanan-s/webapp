@@ -1,59 +1,59 @@
 const express = require('express');
 const router = express.Router();
 const { HealthCheck } = require('../models');
+const logger = require('../logger');
 
 // Handle GET requests to /healthz
 router.get('/healthz', async (req, res) => {
     if (req.headers['content-length'] && parseInt(req.headers['content-length']) > 0) {
+        logger.warn("Received request with payload on /healthz");
         return res.status(400).set({
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             Pragma: 'no-cache',
             'X-Content-Type-Options': 'nosniff',
-        }).send(); // 400 Bad Request
+        }).send();
     }
     if (Object.keys(req.query).length > 0) {
+        logger.warn("Received query parameters on /healthz");
         return res.status(400).set({
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             Pragma: 'no-cache',
             'X-Content-Type-Options': 'nosniff',
-        }).end(); // No response body
+        }).end();
     }
     try {
-        // Insert a health check record into the database
         await HealthCheck.create({});
+        logger.info("Health check recorded successfully");
         res.status(200).set({
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             Pragma: 'no-cache',
             'X-Content-Type-Options': 'nosniff',
-        }).send(); // 200 OK
+        }).send();
     } catch (error) {
-        console.error('Health check error:', error);
+        logger.error("Health check error", error);
         res.status(503).set({
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             Pragma: 'no-cache',
             'X-Content-Type-Options': 'nosniff',
-        }).send(); // 503 Service Unavailable
+        }).send();
     }
 });
 
-// Handle other HTTP methods on /healthz
 router.all('/healthz', (req, res) => {
+    logger.warn("Unsupported method on /healthz");
     res.status(405).set({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         Pragma: 'no-cache',
         'X-Content-Type-Options': 'nosniff',
-    }).send(); // 405 Method Not Allowed
+    }).send();
 });
 
-// Handle other HTTP methods on /healthz
 router.all('*', (req, res) => {
+    logger.warn("Request for unknown endpoint", { endpoint: req.path });
     res.status(404).set({
         'Cache-Control': 'no-cache, no-store, must-revalidate',
         Pragma: 'no-cache',
         'X-Content-Type-Options': 'nosniff',
-    }).send(); // 405 Method Not Allowed
+    }).send();
 });
 module.exports = router;
-
-
-

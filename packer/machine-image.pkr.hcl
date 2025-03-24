@@ -100,4 +100,18 @@ build {
   provisioner "shell" {
     script = "../scripts/git_removal.sh"
   }
+
+    # Create log directory and set ownership to csye6225:csye6225.
+  provisioner "shell" {
+    script = "../scripts/create_log_directory.sh"
+  }
+
+  provisioner "file" {
+    source      = "./configs/amazon-cloudwatch-agent.json"
+    destination = "/home/ubuntu/amazon-cloudwatch-agent.json"
+  }
+
+  provisioner "shell" {
+    script = "../scripts/install_cloudwatch_agent.sh"
+  }
 }

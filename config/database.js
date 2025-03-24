@@ -1,6 +1,9 @@
 const { Sequelize } = require('sequelize');
 require('dotenv').config();
-console.log("DEBUG: Process ENV contains DB_PASSWORD?", Boolean(process.env.DB_PASSWORD));
+const logger = require('../logger');
+const statsd = require('../metrics');
+
+logger.info("DEBUG: Process ENV contains DB_PASSWORD?", { DB_PASSWORD: Boolean(process.env.DB_PASSWORD) });
 
 const sequelize = new Sequelize(
     process.env.DB_NAME,
@@ -16,7 +19,13 @@ const sequelize = new Sequelize(
                 rejectUnauthorized: false  // Use with caution; in production, use proper CA certificates.
             }
         },
-        logging: false,
+        logging: (msg, time) => {
+            logger.info(msg);
+            if (typeof time == 'number') {
+                StatsD.timing('db.query.timer', time);
+            }
+        },
+        benchmark: true,
     },
 );
 
