@@ -101,7 +101,7 @@ build {
     script = "../scripts/git_removal.sh"
   }
 
-    # Create log directory and set ownership to csye6225:csye6225.
+  # Create log directory and set ownership to csye6225:csye6225.
   provisioner "shell" {
     script = "../scripts/create_log_directory.sh"
   }
