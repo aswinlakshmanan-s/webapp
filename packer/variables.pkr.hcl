@@ -53,7 +53,7 @@ variable "aws_ami_owners" {
 
 variable "aws_source_ami" {
   type    = string
-  default = "ami-03ec9b8707537856b"
+  default = "ami-02f9afd340e6c0065"
 }
 
 
