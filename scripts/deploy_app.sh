@@ -10,8 +10,8 @@ sudo apt-get update -y && sudo apt-get install -y unzip
 echo "Deploying application artifact..."
 sudo unzip /tmp/webapp-fork.zip -d /opt/csye6225/webapp
 
-echo "Setting ownership of /opt/csye6225/webapp to csye6225..."
-sudo chown -R csye6225:csye6225 /opt/csye6225/webapp
+echo "Setting ownership of /opt/csye6225/ to csye6225..."
+sudo chown -R csye6225:csye6225 /opt/csye6225/
 
 # echo "Injecting DB secrets into .env file..."
 # cat <<EOF > /tmp/.env.temp
