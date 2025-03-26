@@ -3,7 +3,9 @@ require('dotenv').config({ path: '/opt/csye6225/webapp/.env' });
 const logger = require('../logger');
 const statsd = require('../metrics');
 
-logger.info("DEBUG: Process ENV contains DB_PASSWORD?", { DB_PASSWORD: Boolean(process.env.DB_PASSWORD) });
+logger.info("Verifying environment: DB_PASSWORD is set.", { DB_PASSWORD: Boolean(process.env.DB_PASSWORD) });
+
+const useSSL = process.env.NODE_ENV === 'production';
 
 const sequelize = new Sequelize(
     process.env.DB_NAME,
@@ -13,15 +15,14 @@ const sequelize = new Sequelize(
         host: process.env.DB_HOST,
         port: process.env.DB_PORT,
         dialect: 'postgres',
-        // Disable SSL when running in a test or non-production environment
-        dialectOptions: process.env.NODE_ENV === 'production' ? {
+        dialectOptions: useSSL ? {
             ssl: {
                 require: true,
-                rejectUnauthorized: false  // Use with caution; in production, use proper CA certificates.
+                rejectUnauthorized: false
             }
         } : {},
         logging: (msg, time) => {
-            logger.info(msg);
+            logger.info(`Sequelize Query Executed: ${msg}`);
             if (typeof time === 'number') {
                 statsd.timing('db.query.timer', time);
             }
@@ -30,6 +31,9 @@ const sequelize = new Sequelize(
     },
 );
 
+// Log successful connection attempt
+sequelize.authenticate()
+    .then(() => logger.info("Database connection established successfully."))
+    .catch((error) => logger.error("Database connection failed.", { error: error.message, stack: error.stack }));
+
 module.exports = sequelize;
-
-
