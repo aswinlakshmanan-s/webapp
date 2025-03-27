@@ -107,12 +107,12 @@ build {
   # }
 
   # Create the target directory and set correct ownership
-provisioner "shell" {
-  inline = [
-    "sudo mkdir -p /opt/csye6225/webapp/configs",
-    "sudo chown csye6225:csye6225 /opt/csye6225/webapp/configs"
-  ]
-}
+  provisioner "shell" {
+    inline = [
+      "sudo mkdir -p /opt/csye6225/webapp/configs",
+      "sudo chown csye6225:csye6225 /opt/csye6225/webapp/configs"
+    ]
+  }
 
   provisioner "file" {
     source      = "./configs/amazon-cloudwatch-agent.json"
