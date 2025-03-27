@@ -102,21 +102,13 @@ build {
   }
 
   # Create log directory and set ownership to csye6225:csye6225.
-  # provisioner "shell" {
-  #   script = "../scripts/create_log_directory.sh"
-  # }
-
-  # Create the target directory and set correct ownership
   provisioner "shell" {
-    inline = [
-      "sudo mkdir -p /opt/csye6225/webapp/configs",
-      "sudo chown csye6225:csye6225 /opt/csye6225/webapp/configs"
-    ]
+    script = "../scripts/create_log_directory.sh"
   }
 
   provisioner "file" {
     source      = "./configs/amazon-cloudwatch-agent.json"
-    destination = "/opt/csye6225/webapp/configs/amazon-cloudwatch-agent.json"
+    destination = "/home/ubuntu/amazon-cloudwatch-agent.json"
   }
 
   provisioner "shell" {
