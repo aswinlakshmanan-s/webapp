@@ -50,6 +50,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    outputs:
+      ami_id: ${{ steps.extract_ami.outputs.ami_id }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -103,13 +105,18 @@ jobs:
         id: extract_ami
         run: |
           AMI_ID=$(grep -oP 'ami-[a-f0-9]+' $HOME/packer_output.log | tail -1)
-          echo "AMI_ID: $AMI_ID"
-          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+          if [ -z "$AMI_ID" ]; then
+            echo "Error: AMI_ID is empty. Check packer_output.log." >&2
+            exit 1
+          fi
+          echo "Extracted AMI_ID: $AMI_ID"
+          # Set the output for this job so deploy can access it
+          echo "ami_id=$AMI_ID" >> $GITHUB_OUTPUT
 
       - name: Share AWS AMI with DEMO AWS Account
         run: |
           aws ec2 modify-image-attribute \
-            --image-id ${{ env.AMI_ID }} \
+            --image-id ${{ steps.extract_ami.outputs.ami_id }} \
             --launch-permission "Add=[{UserId=${{ secrets.AWS_DEMO_ACCOUNT_ID }} }]" \
             --region ${{ secrets.AWS_REGION }}
 
@@ -119,6 +126,7 @@ jobs:
     env:
       ASG_NAME: csye6225_asg
       LAUNCH_TEMPLATE_ID: lt-09fcfad07c8c5fe30
+      AMI_ID: ${{ needs.build-ami.outputs.ami_id }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
