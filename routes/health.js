@@ -45,7 +45,7 @@ const healthHandler = async (req, res) => {
 router.get('/healthz', healthHandler);
 
 // New /cicd endpoint using the same handler
-router.get('/cicd', healthHandler);
+// router.get('/cicd', healthHandler);
 
 router.all('/healthz', (req, res) => {
     logger.warn("Received unsupported HTTP method on /healthz.", { method: req.method });
