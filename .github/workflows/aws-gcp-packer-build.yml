@@ -61,7 +61,7 @@ jobs:
       - name: List artifact contents
         run: ls -la webapp-fork.zip
 
-      - name: Configure AWS Credentials
+      - name: Configure AWS Credentials for DEV Account
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
@@ -99,16 +99,85 @@ jobs:
             -var "port=${{ secrets.PORT }}" \
             . | tee $HOME/packer_output.log
 
-      - name: Extract AMI ID and GCP Image Name
-        id: extract_packer_outputs
+      - name: Extract AMI ID from Packer Output
+        id: extract_ami
         run: |
           AMI_ID=$(grep -oP 'ami-[a-f0-9]+' $HOME/packer_output.log | tail -1)
-          
-          echo "ami-id=$AMI_ID" >> $GITHUB_ENV
-          
-      - name: Share AWS AMI with Another AWS Account
+          echo "AMI_ID: $AMI_ID"
+          echo "AMI_ID=$AMI_ID" >> $GITHUB_ENV
+
+      - name: Share AWS AMI with DEMO AWS Account
         run: |
           aws ec2 modify-image-attribute \
-            --image-id ${{ env.ami-id }} \
+            --image-id ${{ env.AMI_ID }} \
             --launch-permission "Add=[{UserId=${{ secrets.AWS_DEMO_ACCOUNT_ID }} }]" \
             --region ${{ secrets.AWS_REGION }}
+
+  deploy:
+    needs: build-ami
+    runs-on: ubuntu-latest
+    env:
+      ASG_NAME: csye6225_asg
+      LAUNCH_TEMPLATE_ID: lt-09fcfad07c8c5fe30
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials for DEMO Account
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_DEMO_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_DEMO_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Create New Launch Template Version
+        id: create_lt_version
+        run: |
+          echo "Creating new launch template version with AMI ${{ env.AMI_ID }}..."
+          NEW_LT_VERSION=$(aws ec2 create-launch-template-version \
+            --launch-template-id $LAUNCH_TEMPLATE_ID \
+            --source-version '$Latest' \
+            --launch-template-data "{\"ImageId\":\"${{ env.AMI_ID }}\"}" \
+            --query 'LaunchTemplateVersion.VersionNumber' --output text)
+          echo "New launch template version: $NEW_LT_VERSION"
+          echo "lt_version=$NEW_LT_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Update Auto Scaling Group to Use New Launch Template Version
+        run: |
+          aws autoscaling update-auto-scaling-group \
+            --auto-scaling-group-name $ASG_NAME \
+            --launch-template "LaunchTemplateId=$LAUNCH_TEMPLATE_ID,Version=${{ steps.create_lt_version.outputs.lt_version }}"
+
+      - name: Start Instance Refresh on ASG
+        id: start_instance_refresh
+        run: |
+          REFRESH_ID=$(aws autoscaling start-instance-refresh \
+            --auto-scaling-group-name $ASG_NAME \
+            --preferences '{"MinHealthyPercentage":90,"InstanceWarmup":60}' \
+            --query 'InstanceRefreshId' --output text)
+          echo "Instance refresh initiated with ID: $REFRESH_ID"
+          echo "refresh_id=$REFRESH_ID" >> $GITHUB_OUTPUT
+
+      - name: Wait for Instance Refresh to Complete
+        run: |
+          REFRESH_ID=${{ steps.start_instance_refresh.outputs.refresh_id }}
+          echo "Waiting for instance refresh with ID: $REFRESH_ID to complete..."
+          STATUS="InProgress"
+          while [ "$STATUS" = "InProgress" ]; do
+            STATUS=$(aws autoscaling describe-instance-refreshes \
+              --auto-scaling-group-name $ASG_NAME \
+              --query "InstanceRefreshes[?InstanceRefreshId=='$REFRESH_ID'].Status" --output text)
+            echo "Current refresh status: $STATUS"
+            if [ "$STATUS" = "Successful" ] || [ "$STATUS" = "Failed" ]; then
+              break
+            fi
+            sleep 30
+          done
+          echo "Final instance refresh status: $STATUS"
+          if [ "$STATUS" != "Successful" ]; then
+            echo "Instance refresh failed!"
+            exit 1
+          fi
+
+      - name: Deployment Complete
+        run: echo "Instance refresh complete and successful."
