@@ -3,11 +3,12 @@ const router = express.Router();
 const { HealthCheck } = require('../models');
 const logger = require('../logger');
 
-router.get('/healthz', async (req, res) => {
-    logger.info("Received GET request on /healthz.", { headers: req.headers, query: req.query });
+// Create a reusable handler function for health checks
+const healthHandler = async (req, res) => {
+    logger.info("Received GET request on health endpoint.", { headers: req.headers, query: req.query });
 
     if (req.headers['content-length'] && parseInt(req.headers['content-length'], 10) > 0) {
-        logger.warn("Request on /healthz contained an unexpected payload.");
+        logger.warn("Request on health endpoint contained an unexpected payload.");
         return res.status(400).set({
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             Pragma: 'no-cache',
@@ -15,7 +16,7 @@ router.get('/healthz', async (req, res) => {
         }).send();
     }
     if (Object.keys(req.query).length > 0) {
-        logger.warn("Request on /healthz contained query parameters which are not permitted.");
+        logger.warn("Request on health endpoint contained query parameters which are not permitted.");
         return res.status(400).set({
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             Pragma: 'no-cache',
@@ -38,7 +39,13 @@ router.get('/healthz', async (req, res) => {
             'X-Content-Type-Options': 'nosniff'
         }).send();
     }
-});
+};
+
+// Existing /healthz endpoint using the reusable handler
+router.get('/healthz', healthHandler);
+
+// New /cicd endpoint using the same handler
+router.get('/cicd', healthHandler);
 
 router.all('/healthz', (req, res) => {
     logger.warn("Received unsupported HTTP method on /healthz.", { method: req.method });
