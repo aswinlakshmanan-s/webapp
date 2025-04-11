@@ -123,8 +123,8 @@ jobs:
     needs: build-ami
     runs-on: ubuntu-latest
     env:
-      ASG_NAME: csye6225_asg
-      LAUNCH_TEMPLATE_NAME: csye6225-webapp-lt
+      ASG_NAME: ${{ secrets.ASG_NAME }}
+      LAUNCH_TEMPLATE_NAME: ${{ secrets.LAUNCH_TEMPLATE_NAME }}
       AMI_ID: ${{ needs.build-ami.outputs.ami_id }}
     steps:
       - name: Checkout code
