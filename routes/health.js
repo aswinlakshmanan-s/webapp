@@ -45,7 +45,8 @@ const healthHandler = async (req, res) => {
 router.get('/healthz', healthHandler);
 
 // New /cicd endpoint using the same handler
-router.get('/cicd', healthHandler);
+// router.get('/cicd', healthHandler);
+
 
 
 
