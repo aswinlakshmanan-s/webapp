@@ -49,6 +49,7 @@ router.get('/healthz', healthHandler);
 
 
 
+
 router.all('/healthz', (req, res) => {
     logger.warn("Received unsupported HTTP method on /healthz.", { method: req.method });
     res.status(405).set({
